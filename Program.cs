@@ -60,9 +60,13 @@ namespace mkdd_patch
             var cache = InitializeCache( Config.FilesDir, cacheFilesDir );
             var modsProcessed = ProcessMods( Config.FilesDir, cacheFilesDir, cache.ArchiveDirs );
             if ( modsProcessed > 0 )
+            {
                 ProcessBinDir( Config.OutDir, cache.ArchiveDirs );
+            }
             else
+            {
                 Console.WriteLine( "No mods available to install" );
+            }
 
             Console.WriteLine( "Done!" );
         }
@@ -165,8 +169,6 @@ namespace mkdd_patch
         {
             Console.WriteLine( "Processing mods" );
 
-            // Delete previous output
-            Directory.Delete( Config.OutDir, true );
             Directory.CreateDirectory( Config.OutDir );
 
             // Iterate over mods
@@ -179,18 +181,19 @@ namespace mkdd_patch
                     continue;
 
                 Console.WriteLine( $"Processing mod {modDirName}" );
-                ProcessModDir( rootFilesDir, cacheFilesDir, modDir, archiveDirSet, Path.Combine( modDir, "files" ), isArcDir: false );
+                var modFilesDir = Path.Combine( modDir, "files" );
+                ProcessModDir( rootFilesDir, cacheFilesDir, modDir, modFilesDir, archiveDirSet, Path.Combine( modDir, "files" ), isArcDir: false );
                 ++modsProcessed;
             }
 
             return modsProcessed;
         }
 
-        private static void ProcessModDir( string rootFilesDir, string cacheFilesDir, string modDir, HashSet<string> archiveDirSet, string dir, bool isArcDir )
+        private static void ProcessModDir( string rootFilesDir, string cacheFilesDir, string modDir, string modFilesDir, HashSet<string> archiveDirSet, string dir, bool isArcDir )
         {
             foreach ( var entryName in Directory.EnumerateFileSystemEntries( dir ) )
             {
-                var relEntryPath = Path.GetRelativePath( dir, entryName );
+                var relEntryPath = MakeRelative(entryName, modFilesDir);
 
                 if ( File.Exists(entryName) )
                 {
@@ -224,12 +227,12 @@ namespace mkdd_patch
                         if ( arcRootDir == null )
                             throw new InvalidOperationException( $"Unable to determine archive root directory for {entryName}. Make sure there is only 1 directory inside." );
 
-                        ProcessModDir( rootFilesDir, cacheFilesDir, modDir, archiveDirSet, arcRootDir, isArcDir: true );
+                        ProcessModDir( rootFilesDir, cacheFilesDir, modDir, modFilesDir, archiveDirSet, arcRootDir, isArcDir: true );
                     }
                     else
                     {
                         // Recurse
-                        ProcessModDir( rootFilesDir, cacheFilesDir, modDir, archiveDirSet, entryName, isArcDir );
+                        ProcessModDir( rootFilesDir, cacheFilesDir, modDir, modFilesDir, archiveDirSet, entryName, isArcDir );
                     }
                 }
             }
@@ -367,9 +370,18 @@ namespace mkdd_patch
 
         public static string MakeRelative( string filePath, string referencePath )
         {
-            var fileUri = new Uri(filePath);
-            var referenceUri = new Uri(referencePath);
-            return referenceUri.MakeRelativeUri( fileUri ).ToString();
+            var fullFilePath = Path.GetFullPath(filePath);
+            var fullReferencePath = Path.GetFullPath(referencePath);
+            if ( fullFilePath.StartsWith( fullReferencePath ) )
+            {
+                return fullFilePath.Substring( fullReferencePath.Length + 1 );
+            }
+            else
+            {
+                var fileUri = new Uri(filePath);
+                var referenceUri = new Uri(referencePath);
+                return referenceUri.MakeRelativeUri( fileUri ).ToString();
+            }
         }
     }
 }
