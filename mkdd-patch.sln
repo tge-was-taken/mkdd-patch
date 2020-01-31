@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mkdd-patch", "mkdd-patch.csproj", "{F58C5536-BF4C-4264-975F-B64B2B98DEB9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F58C5536-BF4C-4264-975F-B64B2B98DEB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F58C5536-BF4C-4264-975F-B64B2B98DEB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F58C5536-BF4C-4264-975F-B64B2B98DEB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F58C5536-BF4C-4264-975F-B64B2B98DEB9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {22D724BA-EEC3-4915-B170-A176D75F9CE8}
+	EndGlobalSection
+EndGlobal
