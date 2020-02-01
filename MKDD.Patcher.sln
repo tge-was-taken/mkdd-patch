@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mkdd-patch", "mkdd-patch.csproj", "{F58C5536-BF4C-4264-975F-B64B2B98DEB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MKDD.Patcher.CLI", "MKDD.Patcher.CLI\MKDD.Patcher.CLI.csproj", "{F58C5536-BF4C-4264-975F-B64B2B98DEB9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKDD.Patcher", "MKDD.Patcher\MKDD.Patcher.csproj", "{DA318C08-FDBB-49AA-B187-9BD2D553D049}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{F58C5536-BF4C-4264-975F-B64B2B98DEB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F58C5536-BF4C-4264-975F-B64B2B98DEB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F58C5536-BF4C-4264-975F-B64B2B98DEB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA318C08-FDBB-49AA-B187-9BD2D553D049}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA318C08-FDBB-49AA-B187-9BD2D553D049}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA318C08-FDBB-49AA-B187-9BD2D553D049}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA318C08-FDBB-49AA-B187-9BD2D553D049}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
