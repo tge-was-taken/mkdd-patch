@@ -1,0 +1,26 @@
+ArcExtract & ArcPack by Lunaboy.
+
+Fixed versions (31.05.2012).
+------------------------------------------------------------------
+
+Usage instructions for use with Windows Explorer:
+1. Place both executables into an empty directory
+2. Copy the .szp (or .arc/.rarc) file from the game to the same directory as the executables
+3. Drag the .szp (or .arc/.rarc) file and place it on top of the 'ArcExtract.exe' filename
+   (a console window opens and closes)
+4. A new directory has been created containing the extracted files and directory structure
+- - - - - - - - - - - -
+5. Modify the files (do not change the filenames or the directory structure, otherwise the game can't find them)
+- - - - - - - - - - - -
+6. Go to the directory containing the two executables
+7. Drag the previously extracted directory and place it on top of the 'ArcPack.exe' filename
+   (a console window opens and closes)
+8. A new .arc file has been created (directory name with the '.arc' extension added)
+9. Replace the arc extension to needed extension (.szp or .rarc)
+
+------------------------------------------------------------------
+The fixes:
+- ArcExtract now creates a new directory with the ARC Root name and extracts everything into this directory
+- ArcPack now writes the real filesize instead of a rounded-up-to-32-bytes filesize
+
+

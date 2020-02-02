@@ -5,7 +5,18 @@ VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MKDD.Patcher.CLI", "MKDD.Patcher.CLI\MKDD.Patcher.CLI.csproj", "{F58C5536-BF4C-4264-975F-B64B2B98DEB9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKDD.Patcher", "MKDD.Patcher\MKDD.Patcher.csproj", "{DA318C08-FDBB-49AA-B187-9BD2D553D049}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MKDD.Patcher", "MKDD.Patcher\MKDD.Patcher.csproj", "{DA318C08-FDBB-49AA-B187-9BD2D553D049}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{51F33560-8CB1-463A-B7B6-305115B35288}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{FCA670A7-E1B0-4F60-97B7-6DB827AB03AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LunaboyRarcTools", "LunaboyRarcTools", "{E2B3B2C2-2F37-4BF2-9DDF-57A6F6C63725}"
+	ProjectSection(SolutionItems) = preProject
+		Tools\LunaboyRarcTools\ArcExtract.exe = Tools\LunaboyRarcTools\ArcExtract.exe
+		Tools\LunaboyRarcTools\ArcPack.exe = Tools\LunaboyRarcTools\ArcPack.exe
+		Tools\LunaboyRarcTools\LunaboyRarcTools.txt = Tools\LunaboyRarcTools\LunaboyRarcTools.txt
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +35,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FCA670A7-E1B0-4F60-97B7-6DB827AB03AF} = {51F33560-8CB1-463A-B7B6-305115B35288}
+		{E2B3B2C2-2F37-4BF2-9DDF-57A6F6C63725} = {FCA670A7-E1B0-4F60-97B7-6DB827AB03AF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {22D724BA-EEC3-4915-B170-A176D75F9CE8}

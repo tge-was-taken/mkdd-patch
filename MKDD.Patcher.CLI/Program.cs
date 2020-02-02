@@ -26,10 +26,11 @@ namespace MKDD.Patcher.CLI
                 {
                     FilesDir = "files",
                     ModsDir = "mods",
-                    OutDir = "mods/.out",
+                    BinDir = "mods/.bin",
+                    OutDir = "files",
                     CacheDir = "mods/.cache",
-                    ArcPackPath = string.Empty,
-                    ArcExtractPath = string.Empty,
+                    ArcPackPath = "Tools/LunaboyRarcTools/ArcPack.exe",
+                    ArcExtractPath = "Tools/LunaboyRarcTools/ArcExtract.exe",
                 };
 
                 File.WriteAllText( CONFIG_PATH, JsonConvert.SerializeObject( defaultConfig, Formatting.Indented ) );
@@ -38,26 +39,6 @@ namespace MKDD.Patcher.CLI
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile(Path.GetFullPath(CONFIG_PATH))
                 .Build();
-
-
-            //var baaPatchBuilder = new BAAPatchBuilder(logger, configuration);
-            //baaPatchBuilder.SetBAAStream( new FileStream( @"D:\Games\GCWii\MKDD_modded\files\AudioRes\GCKart.baa", FileMode.Open, FileAccess.ReadWrite ) );
-            //baaPatchBuilder.PatchAW( File.OpenRead( @"D:\Games\GCWii\MKDD_modded\files\AudioRes\Waves\Voice_0.aw" ), @"D:\Games\GCWii\MKDD_modded\files\AudioRes\_tmp\Voice_0" );
-            //var patch = baaPatchBuilder.Build();
-
-            //Directory.CreateDirectory( "out" );
-            //using ( var fileStream = File.Create( "out/GCKart.baa" ) )
-            //    patch.BAAStream.CopyTo( fileStream );
-
-
-            //Directory.CreateDirectory( "out/Waves" );
-            //foreach ( var item in patch.AWStreams )
-            //{
-            //    using ( var fileStream = File.Create( "out/Waves/" + item.Key ) )
-            //        item.Value.CopyTo( fileStream );
-            //}
-
-            //return;
 
             logger.Information( $"{asmName.Name} {asmName.Version.Major}.{asmName.Version.Minor}.{asmName.Version.Revision} by TGE ({DateTime.Now.Year})\n" );
 

@@ -22,4 +22,12 @@
     <ProjectReference Include="..\MKDD.Patcher\MKDD.Patcher.csproj" />
   </ItemGroup>
 
+  <!-- Copy LunaboyRarcTools -->
+  <ItemGroup>
+    <ContentWithTargetPath Include="..\Tools\LunaboyRarcTools\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>Tools\LunaboyRarcTools\%(Filename)%(Extension)</TargetPath>
+    </ContentWithTargetPath>
+  </ItemGroup>
+
 </Project>

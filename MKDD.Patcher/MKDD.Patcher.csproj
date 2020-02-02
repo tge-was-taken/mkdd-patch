@@ -11,5 +11,14 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Serilog" Version="2.9.1-dev-01154" />
   </ItemGroup>
+  
+  <!-- Copy LunaboyRarcTools -->
+  <ItemGroup>
+    <ContentWithTargetPath Include="..\Tools\LunaboyRarcTools\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>Tools\LunaboyRarcTools\%(Filename)%(Extension)</TargetPath>
+    </ContentWithTargetPath>
+  </ItemGroup> 
+
 
 </Project>
