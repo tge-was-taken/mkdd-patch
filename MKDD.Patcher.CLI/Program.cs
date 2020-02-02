@@ -24,11 +24,11 @@ namespace MKDD.Patcher.CLI
                 logger.Error( $"{CONFIG_PATH} doesn't exist. Creating default configuration..." );
                 var defaultConfig = new
                 {
-                    FilesDir = "files",
-                    ModsDir = "mods",
-                    BinDir = "mods/.bin",
-                    OutDir = "files",
-                    CacheDir = "mods/.cache",
+                    FilesDir = "path/to/mkdd/files/directory",
+                    ModsDir = "path/to/mods/directory",
+                    BinDir = "path/to/mods/directory/.bin",
+                    OutDir = "path/to/mkdd/files/directory",
+                    CacheDir = "path/to/mods/directory/.cache",
                     ArcPackPath = "Tools/LunaboyRarcTools/ArcPack.exe",
                     ArcExtractPath = "Tools/LunaboyRarcTools/ArcExtract.exe",
                 };
