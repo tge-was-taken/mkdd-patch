@@ -4,15 +4,15 @@ namespace MKDD.Patcher
 {
     public class Cache
     {
-        public const int CURRENT_VERSION = 1;
+        public const int CURRENT_VERSION = 2;
 
         public int Version { get; set; }
-        public HashSet<string> ArchiveDirs { get; set; }
+        public Dictionary<string, ContainerType> ContainerDirs { get; set; }
 
         public Cache()
         {
             Version = CURRENT_VERSION;
-            ArchiveDirs = new HashSet<string>();
+            ContainerDirs = new Dictionary<string, ContainerType>();
         }
     }
 }
