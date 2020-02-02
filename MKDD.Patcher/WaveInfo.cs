@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using MKDD.Patcher.IO;
+﻿using MKDD.Patcher.IO;
 
 namespace MKDD.Patcher
 {

@@ -20,8 +20,8 @@ namespace MKDD.Patcher.IO
 
     public enum Storage
     {
-        Value,
-        Reference
+        ByValue,
+        ByReference
     }
 
     public enum Origin
@@ -97,6 +97,16 @@ namespace MKDD.Patcher.IO
             return OffsetBase.Pop();
         }
 
+        public sbyte ReadSByte()
+        {
+            return ( sbyte )ReadByte();
+        }
+
+        public void WriteSByte( sbyte v )
+        {
+            WriteByte( ( byte )v );
+        }
+
         public byte ReadByte()
         {
             return ( byte )BaseStream.ReadByte();
@@ -163,10 +173,10 @@ namespace MKDD.Patcher.IO
             WriteUInt32( integerValue );
         }
 
-        public byte[] ReadBytes(int offset, int count)
+        public byte[] ReadBytes(int count)
         {
             var bytes = new byte[count];
-            ReadBytes( bytes, offset, count );
+            ReadBytes( bytes, 0, count );
             return bytes;
         }
 
@@ -178,6 +188,11 @@ namespace MKDD.Patcher.IO
         public void WriteBytes( byte[] value, int offset, int count )
         {
             BaseStream.Write( value, offset, count );
+        }
+
+        public void WriteBytes( byte[] value )
+        {
+            BaseStream.Write( value, 0, value.Length );
         }
 
         public void Byte( ref byte value )
@@ -261,7 +276,7 @@ namespace MKDD.Patcher.IO
 
         public void WriteString( string value, Storage storage, int length )
         {
-            if ( storage == Storage.Value )
+            if ( storage == Storage.ByValue )
             {
                 WriteStringValue( value );
             }
@@ -284,7 +299,7 @@ namespace MKDD.Patcher.IO
 
         public string ReadString( Storage storage, int length = -1 )
         {
-            if ( storage == Storage.Value )
+            if ( storage == Storage.ByValue )
             {
                 return ReadStringValue( length );
             }
@@ -400,6 +415,17 @@ namespace MKDD.Patcher.IO
             }
         }
 
+        public sbyte[] ReadSBytes( int count )
+        {
+            var values = new sbyte[count];
+            for ( int i = 0; i < values.Length; i++ )
+            {
+                values[i] = ReadSByte();
+            }
+
+            return values;
+        }
+
         public void Align( int alignment )
         {
             var alignedDiff = AlignmentHelper.GetAlignedDifference(Position, 32);
@@ -411,6 +437,39 @@ namespace MKDD.Patcher.IO
             {
                 WriteBytes( mZeroBuffer, 0, alignedDiff );
             }
+        }
+
+        public short[] ReadInt16s( int count )
+        {
+            var values = new short[count];
+            for ( int i = 0; i < values.Length; i++ )
+                values[i] = ReadInt16();
+
+            return values;
+        }
+
+        public void WriteSBytes( sbyte[] values )
+        {
+            for ( int i = 0; i < values.Length; i++ )
+                WriteSByte( values[i] );
+        }
+
+        public void WriteSBytes( sbyte[] values, int v )
+        {
+            for ( int i = 0; i < v; i++ )
+                WriteSByte( values[i] );
+        }
+
+        public void WriteInt16s( short[] v )
+        {
+            for ( int i = 0; i < v.Length; i++ )
+                WriteInt16( v[i] );
+        }
+
+        public void WriteInt16s( short[] values, int count )
+        {
+            for ( int i = 0; i < count; i++ )
+                WriteInt16( values[i] );
         }
     }
 }

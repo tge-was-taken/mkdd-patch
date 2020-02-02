@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
+using MKDD.Patcher.Audio;
 using MKDD.Patcher.IO;
 using Serilog;
 
@@ -43,40 +43,30 @@ namespace MKDD.Patcher
             var waveGroup = mWaveGroups.Where( x => Path.GetFileNameWithoutExtension(x.ArchiveName).Equals(waveGroupName)).FirstOrDefault();
 
             mLogger.Information( $"Patching wave group {waveGroupName}" );
-            var waveBytes = new byte[waveGroup.WaveInfo.Length][];
-            using (var reader = new BinaryIOStream(awStream, IOMode.Read, Endianness.Big, Encoding.Default, true))
-            {
-                for ( int i = 0; i < waveGroup.WaveInfo.Length; i++ )
-                {
-                    reader.Seek( waveGroup.WaveInfo[i].WaveStart, Origin.Begin );
-                    waveBytes[i] = reader.ReadBytes( 0, ( int )( waveGroup.WaveInfo[i].WaveSize ) );
-                }
-            }
+            var waveBytes = ReadWaveGroupRawWaves( awStream, waveGroup );
 
-            var processes = new List<Process>();
-            foreach ( var file in Directory.EnumerateFiles(replacementWavesDir, "*", SearchOption.TopDirectoryOnly) )
+            foreach ( var file in Directory.EnumerateFiles( replacementWavesDir, "*.wav", SearchOption.TopDirectoryOnly ) )
             {
                 var indexValue = Regex.Match(Path.GetFileNameWithoutExtension(file), @"(0_)?(?<index>\d+)")
                     .Groups["index"].Value;
-                var index = int.Parse(indexValue);      
+                var index = int.Parse(indexValue);
+                ref var waveInfo = ref waveGroup.WaveInfo[index];
 
                 mLogger.Information( $"Mapped {file} to index {index}" );
-                if ( Path.GetExtension(file).ToLower() == ".wav" )
+                if ( PathHelper.HasExtension( file, ".wav" ) )
                 {
-                    var rawFilePath = file + ".raw";
-                    mLogger.Information( $"Encoding {file} to {rawFilePath}" );
+                    mLogger.Information( $"Encoding {file} to ADPCM" );
+                    var encodeInfo = AudioHelper.EncodeWavToAdpcm( file, AdpcmFormat.Adpcm4 );
 
-                    var process = new Process();
-                    process.StartInfo = new ProcessStartInfo( mConfiguration["MareepPath"], $@"-errand wave -input ""{file}"" -output ""{rawFilePath}"" ADPCM4" );
-                    process.EnableRaisingEvents = true;
-                    process.Exited += ( s, e ) =>
-                    {
-                        mLogger.Information( $"Injecting encoded file {rawFilePath}" );
-                        waveBytes[index] = File.ReadAllBytes( rawFilePath );
-                        mIO.DeleteFile( rawFilePath );
-                    };
-                    process.Start();
-                    processes.Add( process );
+                    // Update wave info
+                    waveInfo.SampleRate = encodeInfo.SampleRate;
+                    waveInfo.LoopStart = ( uint )encodeInfo.LoopStart;
+                    waveInfo.LoopEnd = ( uint )encodeInfo.LoopEnd;
+                    waveInfo.SampleCount = ( uint )encodeInfo.SampleCount;
+                    var loopHistory = encodeInfo.History[waveInfo.LoopStart / 16];
+                    waveInfo.HistoryLast = ( ushort )loopHistory.Last;
+                    waveInfo.HistoryPenult = ( ushort )loopHistory.Penult;
+                    waveBytes[index] = encodeInfo.Data;
                 }
                 else
                 {
@@ -84,10 +74,6 @@ namespace MKDD.Patcher
                     waveBytes[index] = File.ReadAllBytes( file );
                 }
             }
-
-            // Wait for files to encode
-            foreach ( var process in processes )
-                process.WaitForExit();
 
             mLogger.Information( $"Building new AW" );
             var newAwStream = new MemoryStream();
@@ -106,6 +92,21 @@ namespace MKDD.Patcher
             newAwStream.Position = 0;
             mNewAWStreams[waveGroup.ArchiveName] = newAwStream;
             return this;
+        }
+
+        private static byte[][] ReadWaveGroupRawWaves( Stream awStream, WaveGroup waveGroup )
+        {
+            var waveBytes = new byte[waveGroup.WaveInfo.Length][];
+            using ( var reader = new BinaryIOStream( awStream, IOMode.Read, Endianness.Big, Encoding.Default, true ) )
+            {
+                for ( int i = 0; i < waveGroup.WaveInfo.Length; i++ )
+                {
+                    reader.Seek( waveGroup.WaveInfo[i].WaveStart, Origin.Begin );
+                    waveBytes[i] = reader.ReadBytes( ( int )( waveGroup.WaveInfo[i].WaveSize ) );
+                }
+            }
+
+            return waveBytes;
         }
 
         public BAAPatch Build()

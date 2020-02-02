@@ -95,7 +95,7 @@ namespace MKDD.Patcher
                 {
                     var grp = new WaveGroup();
                     grp.FilePosition = reader.Position;
-                    grp.ArchiveName = reader.ReadString( Storage.Value, 112 );
+                    grp.ArchiveName = reader.ReadString( Storage.ByValue, 112 );
 
                     var waveInfoCount = reader.ReadUInt32();
                     grp.WaveInfo = new WaveInfo[waveInfoCount];
