@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Serilog;
 using Serilog.Core;
+using Serilog.Events;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,55 +18,162 @@ namespace MKDD.Patcher.GUI
     public partial class MainForm : Form
     {
         private Logger mLogger;
-        private IConfiguration mConfiguration;
-        private Patcher mPatcher;
+        private Logger mPatcherLogger;
+        private GuiConfig mConfiguration;
         private MergeOrder mMergeOrder;
+        private ModDb mModDb;
+        private BindingList<ModVm> mModVms;
+        private bool mIsPatching;
 
         public MainForm()
         {
             InitializeComponent();
         }
 
-        public MainForm(Logger logger, IConfiguration configuration)
+        public MainForm(Logger logger, GuiConfig configuration)
             : this()
         {
             mLogger = logger;
-            mConfiguration = configuration;
-            mPatcher = new Patcher(logger, configuration);
-            mMergeOrder = MergeOrder.LastToFirst;
+            mPatcherLogger = new LoggerConfiguration()
+                .WriteTo.Logger(mLogger)
+                .WriteTo.Sink(new DelegateSink(x =>
+                {
+                    if ( x.Level >= LogEventLevel.Information )
+                        Task.Run( () => InvokeOnUIThread( () => LogToRtb( x ) ) );
+                }))
+                .CreateLogger();
 
+            mConfiguration = configuration;
+            mModVms = new BindingList<ModVm>();
+
+            clmEnabled.DataPropertyName = nameof( ModVm.Enabled );
+            clmTitle.DataPropertyName = nameof( ModVm.Title );
+            clmVersion.DataPropertyName = nameof( ModVm.Version );
+            clmAuthors.DataPropertyName = nameof( ModVm.Authors );
+            clmDescription.DataPropertyName = nameof( ModVm.Description );
+
+            Initialize();
+        }
+
+        private void LogToRtb( LogEvent logEvent )
+        {
+            var message = logEvent.RenderMessage();
+            switch ( logEvent.Level )
+            {
+                case LogEventLevel.Verbose:
+                    rtbLog.ForeColor = Color.Black;
+                    break;
+                case LogEventLevel.Debug:
+                    rtbLog.ForeColor = Color.Green;
+                    break;
+                case LogEventLevel.Information:
+                    rtbLog.ForeColor = Color.Black;
+                    break;
+                case LogEventLevel.Warning:
+                    rtbLog.ForeColor = Color.Yellow;
+                    break;
+                case LogEventLevel.Error:
+                    rtbLog.ForeColor = Color.Red;
+                    break;
+                case LogEventLevel.Fatal:
+                    rtbLog.ForeColor = Color.DarkRed;
+                    break;
+            }
+            rtbLog.AppendText( message + "\n" );
+        }
+
+        private void Initialize()
+        {
+            mMergeOrder = MergeOrder.BottomToTop;
+            mModDb = new ModDb( mLogger, mConfiguration.Patcher, mConfiguration.Patcher.ModsDir );
             PopulateGrid();
         }
 
+
         private void PopulateGrid()
         {
-            foreach (DataGridViewRow row in dgvMods.Rows)
-                dgvMods.Rows.Remove(row);
+            mModVms.Clear();
+            dgvMods.DataSource = mModVms;
 
-            // Iterate over mods
-            foreach (var modDir in Directory.EnumerateDirectories(mConfiguration["ModsDir"]))
+            // Iterate over mods 
+            var indexedMods = new List<(int Index, ModInfo DbModInfo, GuiModInfo GuiModInfo)>();
+            foreach ( var modInfo in mModDb.Mods )
             {
-                var modDirName = Path.GetFileName(modDir);
-                if (modDirName.StartsWith("."))
-                    continue;
-
-                dgvMods.Rows.Add(new object[] { true, modDirName });
+                var index = mConfiguration.Mods.FindIndex(x => x.Title == modInfo.Title);
+                if ( index == -1 )
+                {
+                    var guiModInfo = new GuiModInfo() { Enabled = true, Title = modInfo.Title };
+                    mConfiguration.Mods.Add( guiModInfo );
+                    indexedMods.Add( (int.MaxValue, modInfo, guiModInfo) );
+                }
+                else
+                {
+                    var guiModInfo = mConfiguration.Mods[index];
+                    indexedMods.Add( (index, modInfo, guiModInfo) );
+                }
             }
+
+            foreach ( var item in indexedMods.OrderBy( x => x.Index ) )
+                mModVms.Add( new ModVm( item.DbModInfo, item.GuiModInfo ) );
+
+            SaveConfiguration();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            var modFilter = new List<string>();
-            foreach (DataGridViewRow row in dgvMods.Rows)
+            var enabledMods = GetEnabledMods();
+            btnSave.Enabled = false;
+            var patchTask = Task.Run(() =>
             {
-                var enabled = (bool)row.Cells[clmEnabled.Index].Value;
-                var title = (string)row.Cells[clmTitle.Index].Value;
-                if (enabled)
-                    modFilter.Add(title);
+                mIsPatching = true;
+                var patcher = new Patcher(mPatcherLogger, mConfiguration.Patcher, mModDb);
+                patcher.Patch(mMergeOrder, enabledMods);
+            }).ContinueWith(task =>
+            {
+                MessageBox.Show("Patching done!");
+                mIsPatching = false;
+                InvokeOnUIThread(() => btnSave.Enabled = true );
+            });
+        }
+
+        private void InvokeOnUIThread(Action action)
+        {
+            Invoke( action );
+        }
+
+        private int GetModOrder(string title)
+        {
+            for ( int i = 0; i < mModVms.Count; i++ )
+            {
+                if ( mModVms[i].Title == title )
+                    return i;
             }
 
-            var patchTask = Task.Run(() => mPatcher.Patch(mMergeOrder, modFilter))
-                .ContinueWith(task => MessageBox.Show("Patching done!"));
+            return -1;
+        }
+
+        private void SaveConfiguration()
+        {
+            var orderedMods = mConfiguration.Mods.OrderBy( x => GetModOrder( x.Title ) )
+                .ToList();
+
+            mConfiguration.Mods.Clear();
+            mConfiguration.Mods.AddRange( orderedMods );
+            mConfiguration.Save( GuiConfig.FILE_PATH );
+        }
+
+        private List<string> GetEnabledMods()
+        {
+            SaveConfiguration();
+
+            var enabledMods = new List<string>();
+            for ( int i = 0; i < mConfiguration.Mods.Count; i++ )
+            {
+                if ( mConfiguration.Mods[i].Enabled )
+                    enabledMods.Add( mConfiguration.Mods[i].Title );
+            }
+
+            return enabledMods;
         }
 
         private void tsmiAbout_Click(object sender, EventArgs e)
@@ -97,9 +206,10 @@ Special thanks to:
                 var newIndex = index + offset;
                 if (newIndex >= 0 && newIndex < dgvMods.Rows.Count)
                 {
-                    dgvMods.Rows.RemoveAt(index);
-                    dgvMods.Rows.Insert(newIndex, row);
-                    changedSelRowIndices.Add(row.Index);
+                    var item = mModVms[index];
+                    mModVms.RemoveAt( index );
+                    mModVms.Insert( newIndex, item );
+                    changedSelRowIndices.Add( newIndex );
                 }
             }
 
@@ -110,8 +220,20 @@ Special thanks to:
 
         private void tsmiSettings_Click(object sender, EventArgs e)
         {
-            using (var dialog = new ConfigurationForm())
-                dialog.ShowDialog();
+            using ( var dialog = new ConfigurationForm( mConfiguration ) )
+            {
+                if ( dialog.ShowDialog() == DialogResult.OK )
+                {
+                    SaveConfiguration();
+                    Initialize();
+                }
+            }
+        }
+
+        private void rtbLog_TextChanged( object sender, EventArgs e )
+        {
+            rtbLog.SelectionStart = rtbLog.Text.Length;
+            rtbLog.ScrollToCaret();
         }
     }
 }

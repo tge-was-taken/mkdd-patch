@@ -13,20 +13,18 @@ namespace MKDD.Patcher
     public class BAAPatchBuilder
     {
         private ILogger mLogger;
-        private IConfiguration mConfiguration;
         private LoggedIO mIO;
         private BAAParser mBAAParser;
         private Stream mBAAStream;
         private List<WaveGroup> mWaveGroups;
         private Dictionary<string, Stream> mNewAWStreams;
 
-        public BAAPatchBuilder(ILogger logger, IConfiguration configuration)
+        public BAAPatchBuilder(ILogger logger)
         {
             mLogger = logger;
             mIO = new LoggedIO( mLogger );
             mWaveGroups = new List<WaveGroup>();
             mNewAWStreams = new Dictionary<string, Stream>();
-            mConfiguration = configuration;
             mBAAParser = new BAAParser( mLogger );
         }
 

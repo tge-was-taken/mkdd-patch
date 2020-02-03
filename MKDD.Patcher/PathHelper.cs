@@ -33,7 +33,7 @@ namespace MKDD.Patcher
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public static bool Same( string a, string b )
+        public static bool AreEqual( string a, string b )
         {
             return Path.GetFullPath( a ).Equals( Path.GetFullPath( b ), StringComparison.InvariantCultureIgnoreCase );
         }

@@ -28,38 +28,28 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.msMain = new System.Windows.Forms.MenuStrip();
             this.tsmiSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiAbout = new System.Windows.Forms.ToolStripMenuItem();
             this.btnSave = new System.Windows.Forms.Button();
             this.lytMain = new System.Windows.Forms.TableLayoutPanel();
             this.lytModGrid = new System.Windows.Forms.TableLayoutPanel();
             this.dgvMods = new System.Windows.Forms.DataGridView();
+            this.lytSideBar = new System.Windows.Forms.TableLayoutPanel();
+            this.btnDown = new System.Windows.Forms.Button();
+            this.btnUp = new System.Windows.Forms.Button();
+            this.msMain = new System.Windows.Forms.MenuStrip();
             this.clmEnabled = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.clmTitle = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.clmVersion = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.clmAuthors = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.clmDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.lytSideBar = new System.Windows.Forms.TableLayoutPanel();
-            this.btnDown = new System.Windows.Forms.Button();
-            this.btnUp = new System.Windows.Forms.Button();
-            this.msMain.SuspendLayout();
+            this.rtbLog = new System.Windows.Forms.RichTextBox();
             this.lytMain.SuspendLayout();
             this.lytModGrid.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvMods)).BeginInit();
             this.lytSideBar.SuspendLayout();
+            this.msMain.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // msMain
-            // 
-            this.msMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsmiSettings,
-            this.tsmiAbout});
-            this.msMain.Location = new System.Drawing.Point(0, 0);
-            this.msMain.Name = "msMain";
-            this.msMain.Size = new System.Drawing.Size(584, 24);
-            this.msMain.TabIndex = 0;
-            this.msMain.Text = "menuStrip1";
             // 
             // tsmiSettings
             // 
@@ -78,7 +68,7 @@
             // btnSave
             // 
             this.btnSave.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnSave.Location = new System.Drawing.Point(242, 294);
+            this.btnSave.Location = new System.Drawing.Point(242, 482);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
             this.btnSave.TabIndex = 0;
@@ -93,14 +83,16 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lytMain.ColumnCount = 1;
             this.lytMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.lytMain.Controls.Add(this.btnSave, 0, 1);
+            this.lytMain.Controls.Add(this.rtbLog, 0, 1);
             this.lytMain.Controls.Add(this.lytModGrid, 0, 0);
+            this.lytMain.Controls.Add(this.btnSave, 0, 2);
             this.lytMain.Location = new System.Drawing.Point(12, 27);
             this.lytMain.Name = "lytMain";
-            this.lytMain.RowCount = 2;
-            this.lytMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 90F));
+            this.lytMain.RowCount = 3;
+            this.lytMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 70F));
+            this.lytMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.lytMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            this.lytMain.Size = new System.Drawing.Size(560, 322);
+            this.lytMain.Size = new System.Drawing.Size(560, 520);
             this.lytMain.TabIndex = 1;
             // 
             // lytModGrid
@@ -115,13 +107,15 @@
             this.lytModGrid.Name = "lytModGrid";
             this.lytModGrid.RowCount = 1;
             this.lytModGrid.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.lytModGrid.Size = new System.Drawing.Size(554, 283);
+            this.lytModGrid.Size = new System.Drawing.Size(554, 358);
             this.lytModGrid.TabIndex = 1;
             // 
             // dgvMods
             // 
             this.dgvMods.AllowUserToAddRows = false;
+            this.dgvMods.AllowUserToDeleteRows = false;
             this.dgvMods.AllowUserToOrderColumns = true;
+            this.dgvMods.BackgroundColor = System.Drawing.SystemColors.Control;
             this.dgvMods.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvMods.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.clmEnabled,
@@ -132,47 +126,10 @@
             this.dgvMods.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvMods.Location = new System.Drawing.Point(3, 3);
             this.dgvMods.Name = "dgvMods";
-            this.dgvMods.ReadOnly = true;
             this.dgvMods.RowHeadersVisible = false;
             this.dgvMods.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvMods.Size = new System.Drawing.Size(520, 277);
+            this.dgvMods.Size = new System.Drawing.Size(520, 352);
             this.dgvMods.TabIndex = 2;
-            // 
-            // clmEnabled
-            // 
-            this.clmEnabled.HeaderText = "Enabled";
-            this.clmEnabled.Name = "clmEnabled";
-            this.clmEnabled.ReadOnly = true;
-            this.clmEnabled.Width = 50;
-            // 
-            // clmTitle
-            // 
-            this.clmTitle.HeaderText = "Title";
-            this.clmTitle.Name = "clmTitle";
-            this.clmTitle.ReadOnly = true;
-            this.clmTitle.Width = 150;
-            // 
-            // clmVersion
-            // 
-            this.clmVersion.HeaderText = "Version";
-            this.clmVersion.Name = "clmVersion";
-            this.clmVersion.ReadOnly = true;
-            this.clmVersion.Width = 50;
-            // 
-            // clmAuthors
-            // 
-            this.clmAuthors.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
-            this.clmAuthors.HeaderText = "Author(s)";
-            this.clmAuthors.Name = "clmAuthors";
-            this.clmAuthors.ReadOnly = true;
-            this.clmAuthors.Width = 74;
-            // 
-            // clmDescription
-            // 
-            this.clmDescription.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.clmDescription.HeaderText = "Description";
-            this.clmDescription.Name = "clmDescription";
-            this.clmDescription.ReadOnly = true;
             // 
             // lytSideBar
             // 
@@ -187,14 +144,14 @@
             this.lytSideBar.RowCount = 2;
             this.lytSideBar.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.lytSideBar.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.lytSideBar.Size = new System.Drawing.Size(28, 283);
+            this.lytSideBar.Size = new System.Drawing.Size(28, 358);
             this.lytSideBar.TabIndex = 3;
             // 
             // btnDown
             // 
             this.btnDown.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDown.Location = new System.Drawing.Point(3, 144);
+            this.btnDown.Location = new System.Drawing.Point(3, 182);
             this.btnDown.Name = "btnDown";
             this.btnDown.Size = new System.Drawing.Size(22, 30);
             this.btnDown.TabIndex = 1;
@@ -206,7 +163,7 @@
             // 
             this.btnUp.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnUp.Location = new System.Drawing.Point(3, 108);
+            this.btnUp.Location = new System.Drawing.Point(3, 146);
             this.btnUp.Name = "btnUp";
             this.btnUp.Size = new System.Drawing.Size(22, 30);
             this.btnUp.TabIndex = 0;
@@ -214,44 +171,103 @@
             this.btnUp.UseVisualStyleBackColor = true;
             this.btnUp.Click += new System.EventHandler(this.btnUp_Click);
             // 
+            // msMain
+            // 
+            this.msMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tsmiSettings,
+            this.tsmiAbout});
+            this.msMain.Location = new System.Drawing.Point(0, 0);
+            this.msMain.Name = "msMain";
+            this.msMain.Size = new System.Drawing.Size(584, 24);
+            this.msMain.TabIndex = 0;
+            this.msMain.Text = "menuStrip1";
+            // 
+            // clmEnabled
+            // 
+            this.clmEnabled.FalseValue = "false";
+            this.clmEnabled.HeaderText = "Enabled";
+            this.clmEnabled.Name = "clmEnabled";
+            this.clmEnabled.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            this.clmEnabled.TrueValue = "true";
+            this.clmEnabled.Width = 50;
+            // 
+            // clmTitle
+            // 
+            this.clmTitle.HeaderText = "Title";
+            this.clmTitle.Name = "clmTitle";
+            this.clmTitle.Width = 150;
+            // 
+            // clmVersion
+            // 
+            this.clmVersion.HeaderText = "Version";
+            this.clmVersion.Name = "clmVersion";
+            this.clmVersion.Width = 50;
+            // 
+            // clmAuthors
+            // 
+            this.clmAuthors.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
+            this.clmAuthors.HeaderText = "Author(s)";
+            this.clmAuthors.Name = "clmAuthors";
+            this.clmAuthors.Width = 74;
+            // 
+            // clmDescription
+            // 
+            this.clmDescription.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.clmDescription.HeaderText = "Description";
+            this.clmDescription.Name = "clmDescription";
+            // 
+            // rtbLog
+            // 
+            this.rtbLog.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.rtbLog.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.rtbLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rtbLog.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rtbLog.Location = new System.Drawing.Point(3, 367);
+            this.rtbLog.Name = "rtbLog";
+            this.rtbLog.ReadOnly = true;
+            this.rtbLog.Size = new System.Drawing.Size(554, 98);
+            this.rtbLog.TabIndex = 2;
+            this.rtbLog.Text = "";
+            this.rtbLog.TextChanged += new System.EventHandler(this.rtbLog_TextChanged);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(584, 361);
+            this.ClientSize = new System.Drawing.Size(584, 559);
             this.Controls.Add(this.lytMain);
             this.Controls.Add(this.msMain);
             this.MainMenuStrip = this.msMain;
             this.Name = "MainForm";
             this.Text = "MKDD Patcher GUI";
-            this.msMain.ResumeLayout(false);
-            this.msMain.PerformLayout();
             this.lytMain.ResumeLayout(false);
             this.lytModGrid.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvMods)).EndInit();
             this.lytSideBar.ResumeLayout(false);
+            this.msMain.ResumeLayout(false);
+            this.msMain.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-
-        private System.Windows.Forms.MenuStrip msMain;
         private System.Windows.Forms.ToolStripMenuItem tsmiSettings;
         private System.Windows.Forms.ToolStripMenuItem tsmiAbout;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.TableLayoutPanel lytMain;
         private System.Windows.Forms.TableLayoutPanel lytModGrid;
         private System.Windows.Forms.DataGridView dgvMods;
+        private System.Windows.Forms.TableLayoutPanel lytSideBar;
+        private System.Windows.Forms.Button btnUp;
+        private System.Windows.Forms.Button btnDown;
+        private System.Windows.Forms.MenuStrip msMain;
         private System.Windows.Forms.DataGridViewCheckBoxColumn clmEnabled;
         private System.Windows.Forms.DataGridViewTextBoxColumn clmTitle;
         private System.Windows.Forms.DataGridViewTextBoxColumn clmVersion;
         private System.Windows.Forms.DataGridViewTextBoxColumn clmAuthors;
         private System.Windows.Forms.DataGridViewTextBoxColumn clmDescription;
-        private System.Windows.Forms.TableLayoutPanel lytSideBar;
-        private System.Windows.Forms.Button btnUp;
-        private System.Windows.Forms.Button btnDown;
+        private System.Windows.Forms.RichTextBox rtbLog;
     }
 }
 

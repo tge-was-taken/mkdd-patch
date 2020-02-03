@@ -16,14 +16,14 @@ namespace MKDD.Patcher
         {
             if ( !Directory.Exists( directory ) )
             {
-                mLogger.Information( $"Creating directory: {directory}" );
+                mLogger.Debug( $"Creating directory: {directory}" );
                 Directory.CreateDirectory( directory );
             }
         }
 
         public void DeleteDirectory( string directory )
         {
-            mLogger.Information( $"Deleting directory: {directory}" );
+            mLogger.Debug( $"Deleting directory: {directory}" );
             Directory.Delete( directory, true );
         }
 
@@ -31,11 +31,11 @@ namespace MKDD.Patcher
         {
             if ( overwrite && File.Exists( dstFilePath ) )
             {
-                mLogger.Information( $"Overwriting file {dstFilePath} with {srcFilePath}" );
+                mLogger.Debug( $"Overwriting file {dstFilePath} with {srcFilePath}" );
             }
             else
             {
-                mLogger.Information( $"Copying file {srcFilePath} to {dstFilePath}" );
+                mLogger.Debug( $"Copying file {srcFilePath} to {dstFilePath}" );
             }
 
             var fullSrcFilePath = Path.GetFullPath(srcFilePath);
@@ -51,7 +51,7 @@ namespace MKDD.Patcher
         {
             if ( File.Exists( filePath ) )
             {
-                mLogger.Information( $"Deleting file {filePath}" );
+                mLogger.Debug( $"Deleting file {filePath}" );
                 File.Delete( filePath );
             }
         }
