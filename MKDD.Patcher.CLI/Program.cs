@@ -22,18 +22,7 @@ namespace MKDD.Patcher.CLI
             if ( !File.Exists( CONFIG_PATH ) )
             {
                 logger.Error( $"{CONFIG_PATH} doesn't exist. Creating default configuration..." );
-                var defaultConfig = new
-                {
-                    FilesDir = "path/to/mkdd/files/directory",
-                    ModsDir = "path/to/mods/directory",
-                    BinDir = "path/to/mods/directory/.bin",
-                    OutDir = "path/to/mkdd/files/directory",
-                    CacheDir = "path/to/mods/directory/.cache",
-                    ArcPackPath = "Tools/LunaboyRarcTools/ArcPack.exe",
-                    ArcExtractPath = "Tools/LunaboyRarcTools/ArcExtract.exe",
-                };
-
-                File.WriteAllText( CONFIG_PATH, JsonConvert.SerializeObject( defaultConfig, Formatting.Indented ) );
+                ConfigurationHelper.CreateDefaultConfig(CONFIG_PATH);
             }
 
             var configuration = new ConfigurationBuilder()
@@ -47,7 +36,7 @@ namespace MKDD.Patcher.CLI
             {
 #endif
                 var patcher = new Patcher(logger, configuration);
-                patcher.Patch();
+                patcher.Patch(MergeOrder.FirstToLast);
 #if !DEBUG
             }
             catch ( Exception e )

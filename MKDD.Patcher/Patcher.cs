@@ -73,11 +73,11 @@ namespace MKDD.Patcher
             return outFilePath;
         }
 
-        public void Patch()
+        public void Patch( MergeOrder order, List<string> modFilter = null )
         {
             var cacheFilesDir = GetCacheFilesDir();
             var cache = InitializeCache( mConfiguration["FilesDir"], cacheFilesDir );
-            var modsProcessed = ProcessMods( cache );
+            var modsProcessed = ProcessMods(cache, order, modFilter);
             if ( modsProcessed > 0 )
             {
                 ProcessBinDir( mConfiguration["BinDir"], cache );
@@ -99,42 +99,49 @@ namespace MKDD.Patcher
         private bool ValidateConfig()
         {
             // Validate config
+            mConfiguration["FilesDir"] = Path.GetFullPath(mConfiguration["FilesDir"]);
             if ( !Directory.Exists( mConfiguration["FilesDir"] ) )
             {
                 mLogger.Fatal( "Files directory not found. Make sure that the executable is placed in the right directory & the config is set up correctly." );
                 return false;
             }
 
+            mConfiguration["ModsDir"] = Path.GetFullPath(mConfiguration["ModsDir"]);
             if ( !Directory.Exists( mConfiguration["ModsDir"] ) )
             {
                 mLogger.Warning( "Mod directory doesn't exist. Creating new directory..." );
                 mIO.CreateDirectory( mConfiguration["ModsDir"] );
             }
 
+            mConfiguration["BinDir"] = Path.GetFullPath(mConfiguration["BinDir"]);
             if ( !Directory.Exists( mConfiguration["BinDir"] ) )
             {
                 mLogger.Warning( "Bin directory doesn't exist. Creating new directory..." );
                 mIO.CreateDirectory( mConfiguration["BinDir"] );
             }
 
+            mConfiguration["OutDir"] = Path.GetFullPath(mConfiguration["OutDir"]);
             if ( !Directory.Exists( mConfiguration["OutDir"] ) )
             {
                 mLogger.Warning( "Out directory doesn't exist. Creating new directory..." );
                 mIO.CreateDirectory( mConfiguration["OutDir"] );
             }
 
+            mConfiguration["CacheDir"] = Path.GetFullPath(mConfiguration["CacheDir"]);
             if ( !Directory.Exists( mConfiguration["CacheDir"] ) )
             {
                 mLogger.Warning( "Cache directory doesn't exist. Creating new directory..." );
                 mIO.CreateDirectory( mConfiguration["CacheDir"] );
             }
 
+            mConfiguration["ArcPackPath"] = Path.GetFullPath(mConfiguration["ArcPackPath"]);
             if ( !File.Exists( mConfiguration["ArcPackPath"] ) )
             {
                 mLogger.Fatal( "Can't find ArcPack.exe. Verify the path in the config." );
                 return false;
             }
 
+            mConfiguration["ArcExtractPath"] = Path.GetFullPath(mConfiguration["ArcExtractPath"]);
             if ( !File.Exists( mConfiguration["ArcExtractPath"] ) )
             {
                 mLogger.Fatal( "Can't find ArcExtract.exe. Verify the path in the config." );
@@ -174,25 +181,48 @@ namespace MKDD.Patcher
             return cache;
         }
 
-        private int ProcessMods( Cache cache )
+        private int ProcessMods( Cache cache, MergeOrder order, List<string> modFilter = null )
         {
             mLogger.Information( "Processing mods" );
 
+            var filteredMods = new List<(int Index, string Title)>();
+
             // Iterate over mods
-            int modsProcessed = 0;
             foreach ( var modDir in Directory.EnumerateDirectories( mConfiguration["ModsDir"] ) )
             {
                 var modDirName = Path.GetFileName(modDir);
                 if ( modDirName == ".bin" || modDirName == ".cache" )
                     continue;
 
-                mLogger.Information( $"Processing mod {modDirName}" );
-                var modFilesDir = Path.Combine( modDir, "files" );
-                ProcessModDir( modDir, modFilesDir, cache, modFilesDir, isArcDir: false );
-                ++modsProcessed;
+                if (!Directory.Exists(Path.Combine(modDir, "files")))
+                {
+                    mLogger.Error($"Mod directory {modDirName} does not contain a 'files' directory");
+                }
+                else 
+                {
+                    if (modFilter == null || modFilter.Contains(modDirName))
+                        filteredMods.Add((modFilter.IndexOf(modDirName), modDir));
+                }            
             }
 
-            return modsProcessed;
+            // Order the mods we collected based on their index in the filter list
+            var orderedFilteredModQry = order == MergeOrder.FirstToLast ? 
+                    filteredMods.OrderBy(x => x.Index) : 
+                    filteredMods.OrderByDescending(x => x.Index);
+
+            var sortedMods = orderedFilteredModQry.Select(x => x.Title)
+                .ToList();
+
+            foreach (var mod in sortedMods)
+            {
+                var modDirName = Path.GetFileName(mod);
+                var modFilesDir = Path.Combine(mod, "files");
+
+                mLogger.Information($"Processing mod {mod}");
+                ProcessModDir(mod, modFilesDir, cache, modFilesDir, isArcDir: false);
+            }
+
+            return sortedMods.Count;
         }
 
         private void ProcessModDir( string modDir, string modFilesDir, Cache cache, string dir, bool isArcDir )
@@ -457,5 +487,11 @@ namespace MKDD.Patcher
             process.Start();
             runProcessJobs.Add( new RunProcessJob( process ) { TemporaryFiles = { Path.GetFullPath( cacheArcFilePath ) } } );
         }
+    }
+
+    public enum MergeOrder
+    {
+        FirstToLast,
+        LastToFirst,
     }
 }
