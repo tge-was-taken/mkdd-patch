@@ -9,6 +9,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -33,6 +34,9 @@ namespace MKDD.Patcher.GUI
         public MainForm(Logger logger, GuiConfig configuration)
             : this()
         {
+            var asmName = Assembly.GetExecutingAssembly().GetName();
+            Text = $"{asmName.Name} {asmName.Version.Major}.{asmName.Version.Minor}.{asmName.Version.Revision} by TGE";
+
             mLogger = logger;
             mPatcherLogger = new LoggerConfiguration()
                 .WriteTo.Logger(mLogger)
