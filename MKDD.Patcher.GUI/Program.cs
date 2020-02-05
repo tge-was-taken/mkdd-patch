@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using Serilog;
 using Serilog.Core;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -12,35 +11,6 @@ using System.Windows.Forms;
 
 namespace MKDD.Patcher.GUI
 {
-    public class GuiModInfo
-    {
-        public string Title { get; set; }
-        public bool Enabled { get; set; }
-    }
-
-    public class GuiConfig
-    {
-        public const string FILE_PATH = "mkdd-patcher-gui.cfg.json";
-
-        public PatcherConfig Patcher { get; set; }
-        public List<GuiModInfo> Mods { get; set; }
-
-        public GuiConfig()
-        {
-            Patcher = new PatcherConfig();
-            Mods = new List<GuiModInfo>();
-        }
-
-        public static GuiConfig Load( string path )
-        {
-            return JsonConvert.DeserializeObject<GuiConfig>( File.ReadAllText( path ) );
-        }
-
-        public void Save( string path )
-        {
-            File.WriteAllText( path, JsonConvert.SerializeObject( this, Formatting.Indented ) );
-        }
-    }
 
     static class Program
     {
@@ -82,13 +52,12 @@ namespace MKDD.Patcher.GUI
             var configuration = new GuiConfig();
             using ( var dialog = new ConfigurationForm( configuration ) )
             {
-                DialogResult result;
-                do
+                DialogResult result = dialog.ShowDialog();
+                if ( result != DialogResult.OK )
                 {
-                    result = dialog.ShowDialog();
-                    if ( result != DialogResult.OK )
-                        MessageBox.Show( "You must specify a valid configuration for the program to be able to run" );
-                } while ( result != DialogResult.OK );
+                    MessageBox.Show( "You must specify a valid configuration for the program to be able to run. The program will now exit." );
+                    Environment.Exit( -1 );
+                }
             }
 
             return configuration;

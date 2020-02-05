@@ -68,7 +68,7 @@
             // btnSave
             // 
             this.btnSave.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnSave.Location = new System.Drawing.Point(242, 482);
+            this.btnSave.Location = new System.Drawing.Point(242, 488);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
             this.btnSave.TabIndex = 0;
@@ -89,17 +89,17 @@
             this.lytMain.Location = new System.Drawing.Point(12, 27);
             this.lytMain.Name = "lytMain";
             this.lytMain.RowCount = 3;
-            this.lytMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 70F));
-            this.lytMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.lytMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
+            this.lytMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 77.77778F));
+            this.lytMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 22.22222F));
+            this.lytMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.lytMain.Size = new System.Drawing.Size(560, 520);
             this.lytMain.TabIndex = 1;
             // 
             // lytModGrid
             // 
             this.lytModGrid.ColumnCount = 2;
-            this.lytModGrid.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 95F));
-            this.lytModGrid.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 5F));
+            this.lytModGrid.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.lytModGrid.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 26F));
             this.lytModGrid.Controls.Add(this.dgvMods, 0, 0);
             this.lytModGrid.Controls.Add(this.lytSideBar, 1, 0);
             this.lytModGrid.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -107,7 +107,7 @@
             this.lytModGrid.Name = "lytModGrid";
             this.lytModGrid.RowCount = 1;
             this.lytModGrid.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.lytModGrid.Size = new System.Drawing.Size(554, 358);
+            this.lytModGrid.Size = new System.Drawing.Size(554, 367);
             this.lytModGrid.TabIndex = 1;
             // 
             // dgvMods
@@ -128,32 +128,30 @@
             this.dgvMods.Name = "dgvMods";
             this.dgvMods.RowHeadersVisible = false;
             this.dgvMods.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvMods.Size = new System.Drawing.Size(520, 352);
+            this.dgvMods.Size = new System.Drawing.Size(522, 361);
             this.dgvMods.TabIndex = 2;
             // 
             // lytSideBar
             // 
             this.lytSideBar.ColumnCount = 1;
             this.lytSideBar.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.lytSideBar.Controls.Add(this.btnDown, 0, 1);
             this.lytSideBar.Controls.Add(this.btnUp, 0, 0);
+            this.lytSideBar.Controls.Add(this.btnDown, 0, 1);
             this.lytSideBar.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lytSideBar.Location = new System.Drawing.Point(526, 0);
+            this.lytSideBar.Location = new System.Drawing.Point(528, 0);
             this.lytSideBar.Margin = new System.Windows.Forms.Padding(0);
             this.lytSideBar.Name = "lytSideBar";
             this.lytSideBar.RowCount = 2;
             this.lytSideBar.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.lytSideBar.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.lytSideBar.Size = new System.Drawing.Size(28, 358);
+            this.lytSideBar.Size = new System.Drawing.Size(26, 367);
             this.lytSideBar.TabIndex = 3;
             // 
             // btnDown
             // 
-            this.btnDown.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDown.Location = new System.Drawing.Point(3, 182);
+            this.btnDown.Location = new System.Drawing.Point(3, 186);
             this.btnDown.Name = "btnDown";
-            this.btnDown.Size = new System.Drawing.Size(22, 30);
+            this.btnDown.Size = new System.Drawing.Size(20, 30);
             this.btnDown.TabIndex = 1;
             this.btnDown.Text = "↓";
             this.btnDown.UseVisualStyleBackColor = true;
@@ -163,9 +161,9 @@
             // 
             this.btnUp.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnUp.Location = new System.Drawing.Point(3, 146);
+            this.btnUp.Location = new System.Drawing.Point(3, 150);
             this.btnUp.Name = "btnUp";
-            this.btnUp.Size = new System.Drawing.Size(22, 30);
+            this.btnUp.Size = new System.Drawing.Size(20, 30);
             this.btnUp.TabIndex = 0;
             this.btnUp.Text = "↑";
             this.btnUp.UseVisualStyleBackColor = true;
@@ -222,10 +220,10 @@
             this.rtbLog.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.rtbLog.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rtbLog.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rtbLog.Location = new System.Drawing.Point(3, 367);
+            this.rtbLog.Location = new System.Drawing.Point(3, 376);
             this.rtbLog.Name = "rtbLog";
             this.rtbLog.ReadOnly = true;
-            this.rtbLog.Size = new System.Drawing.Size(554, 98);
+            this.rtbLog.Size = new System.Drawing.Size(554, 100);
             this.rtbLog.TabIndex = 2;
             this.rtbLog.Text = "";
             this.rtbLog.TextChanged += new System.EventHandler(this.rtbLog_TextChanged);

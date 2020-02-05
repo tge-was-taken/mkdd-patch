@@ -3,7 +3,7 @@
     public class ModVm
     {
         private readonly ModInfo mDbInfo;
-        private readonly GuiModInfo mGuiInfo;
+        private readonly GuiModConfig mGuiInfo;
 
         public bool Enabled
         {
@@ -16,7 +16,7 @@
         public string Authors => mDbInfo.Author;
         public string Description => mDbInfo.Description;
 
-        public ModVm( ModInfo dbInfo, GuiModInfo guiInfo)
+        public ModVm( ModInfo dbInfo, GuiModConfig guiInfo)
         {
             mDbInfo = dbInfo;
             mGuiInfo = guiInfo;

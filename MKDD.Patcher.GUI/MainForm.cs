@@ -100,13 +100,13 @@ namespace MKDD.Patcher.GUI
             dgvMods.DataSource = mModVms;
 
             // Iterate over mods 
-            var indexedMods = new List<(int Index, ModInfo DbModInfo, GuiModInfo GuiModInfo)>();
+            var indexedMods = new List<(int Index, ModInfo DbModInfo, GuiModConfig GuiModInfo)>();
             foreach ( var modInfo in mModDb.Mods )
             {
                 var index = mConfiguration.Mods.FindIndex(x => x.Title == modInfo.Title);
                 if ( index == -1 )
                 {
-                    var guiModInfo = new GuiModInfo() { Enabled = true, Title = modInfo.Title };
+                    var guiModInfo = new GuiModConfig() { Enabled = true, Title = modInfo.Title };
                     mConfiguration.Mods.Add( guiModInfo );
                     indexedMods.Add( (int.MaxValue, modInfo, guiModInfo) );
                 }
