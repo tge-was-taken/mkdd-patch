@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using arookas;
 using MKDD.Patcher.IO;
@@ -26,12 +27,12 @@ namespace MKDD.Patcher.Audio
 
     public static class AudioHelper
     {
-        public static EncodedWavInfo EncodeWavToAdpcm( string file, AdpcmFormat format )
+        public static EncodedWavInfo EncodeWavToAdpcm( Stream stream, AdpcmFormat format )
         {
             var result = new EncodedWavInfo();
             result.Format = format;
 
-            using ( var waveReader = new WaveFileReader( file ) )
+            using ( var waveReader = new WaveFileReader( stream ) )
             {
                 result.SampleRate = waveReader.WaveFormat.SampleRate;
                 result.SampleCount = ( int )waveReader.SampleCount;

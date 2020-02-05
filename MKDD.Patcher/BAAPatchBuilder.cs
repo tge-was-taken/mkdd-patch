@@ -35,7 +35,7 @@ namespace MKDD.Patcher
             return this;
         }
 
-        public BAAPatchBuilder PatchAW(Stream awStream, string replacementWavesDir)
+        public BAAPatchBuilder PatchAW(Stream awStream, IFileSystem fs, string replacementWavesDir)
         {
             var waveGroupName = Path.GetFileNameWithoutExtension(replacementWavesDir);
             var waveGroup = mWaveGroups.Where( x => Path.GetFileNameWithoutExtension(x.ArchiveName).Equals(waveGroupName)).FirstOrDefault();
@@ -43,7 +43,7 @@ namespace MKDD.Patcher
             mLogger.Information( $"Patching wave group {waveGroupName}" );
             var waveBytes = ReadWaveGroupRawWaves( awStream, waveGroup );
 
-            foreach ( var file in Directory.EnumerateFiles( replacementWavesDir, "*.wav", SearchOption.TopDirectoryOnly ) )
+            foreach ( var file in fs.EnumerateFiles( replacementWavesDir, "*.wav", SearchOption.TopDirectoryOnly ) )
             {
                 var indexValue = Regex.Match(Path.GetFileNameWithoutExtension(file), @"(0_)?(?<index>\d+)")
                     .Groups["index"].Value;
@@ -51,25 +51,30 @@ namespace MKDD.Patcher
                 ref var waveInfo = ref waveGroup.WaveInfo[index];
 
                 mLogger.Information( $"Mapped {file} to index {index}" );
-                if ( PathHelper.HasExtension( file, ".wav" ) )
+                using ( var fileStream = fs.OpenFile( file, FileMode.Open, FileAccess.Read ) )
                 {
-                    mLogger.Information( $"Encoding {file} to ADPCM" );
-                    var encodeInfo = AudioHelper.EncodeWavToAdpcm( file, AdpcmFormat.Adpcm4 );
+                    if ( PathHelper.HasExtension( file, ".wav" ) )
+                    {
+                        mLogger.Information( $"Encoding {file} to ADPCM" );
+                        var encodeInfo = AudioHelper.EncodeWavToAdpcm( fileStream, AdpcmFormat.Adpcm4 );
 
-                    // Update wave info
-                    waveInfo.SampleRate = encodeInfo.SampleRate;
-                    waveInfo.LoopStart = ( uint )encodeInfo.LoopStart;
-                    waveInfo.LoopEnd = ( uint )encodeInfo.LoopEnd;
-                    waveInfo.SampleCount = ( uint )encodeInfo.SampleCount;
-                    var loopHistory = encodeInfo.History[waveInfo.LoopStart / 16];
-                    waveInfo.HistoryLast = ( ushort )loopHistory.Last;
-                    waveInfo.HistoryPenult = ( ushort )loopHistory.Penult;
-                    waveBytes[index] = encodeInfo.Data;
-                }
-                else
-                {
-                    mLogger.Information( $"Injecting raw file {file}" );
-                    waveBytes[index] = File.ReadAllBytes( file );
+                        // Update wave info
+                        waveInfo.SampleRate = encodeInfo.SampleRate;
+                        waveInfo.LoopStart = ( uint )encodeInfo.LoopStart;
+                        waveInfo.LoopEnd = ( uint )encodeInfo.LoopEnd;
+                        waveInfo.SampleCount = ( uint )encodeInfo.SampleCount;
+                        var loopHistory = encodeInfo.History[waveInfo.LoopStart / 16];
+                        waveInfo.HistoryLast = ( ushort )loopHistory.Last;
+                        waveInfo.HistoryPenult = ( ushort )loopHistory.Penult;
+                        waveBytes[index] = encodeInfo.Data;
+                    }
+                    else
+                    {
+                        mLogger.Information( $"Injecting raw file {file}" );
+                        var fileBytes = new byte[fileStream.Length];
+                        fileStream.Write( fileBytes, 0, fileBytes.Length );
+                        waveBytes[index] = fileBytes;
+                    }
                 }
             }
 

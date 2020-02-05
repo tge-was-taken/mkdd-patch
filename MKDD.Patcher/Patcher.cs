@@ -9,80 +9,40 @@ using Serilog;
 
 namespace MKDD.Patcher
 {
-    public enum ContainerType
-    {
-        ARC,
-        AW
-    }
-
     public partial class Patcher
     {
+        private const string BAA_PATH = "AudioRes\\GCKart.baa";
         private readonly ILogger mLogger;
         private readonly PatcherConfig mConfiguration;
-        private readonly LoggedIO mIO;
         private readonly ModDb mModDb;
+        private readonly DirectoryFileSystem mOutDir;
+        private readonly DirectoryFileSystem mFilesDir;
+        private readonly DirectoryFileSystem mCacheFilesDir;
+        private readonly DirectoryFileSystem mBinDir;
 
         public Patcher( ILogger logger, PatcherConfig configuration, ModDb modDb )
         {
             mLogger = logger;
             mConfiguration = configuration;
-            mIO = new LoggedIO( logger );
             mModDb = modDb;
 
             mLogger.Information( "Validating configuration" );
             if ( !ValidateConfig() )
                 throw new ArgumentException( "Invalid configuration", nameof( configuration ) );
-        }
 
-        private string GetCacheFilesDir()
-        {
-            return Path.GetFullPath( Path.Combine( mConfiguration.CacheDir, "files" ) );
-        }
-
-        private string GetBinFilePathFromRelPath( string relPath )
-        {
-            return Path.Combine( mConfiguration.BinDir, relPath ); ;
-        }
-
-        private string GetCacheFilePathFromRelPath( string relPath )
-        {
-            return Path.Combine( mConfiguration.CacheDir + "/files", relPath );
-        }
-
-        public enum FileMissingPolicy
-        {
-            CopyFromCache
-        }
-
-        private string GetFileFromOutputDir( string relPath, FileMissingPolicy policy )
-        {
-            var outFilePath = GetBinFilePathFromRelPath( relPath);
-            if ( !File.Exists( outFilePath ) )
-            {
-                switch ( policy )
-                {
-                    case FileMissingPolicy.CopyFromCache:
-                        {
-                            var cacheFilePath = GetCacheFilePathFromRelPath(relPath);
-                            mIO.CopyFile( cacheFilePath, outFilePath, true );
-                        }
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
-            }
-
-            return outFilePath;
+            mOutDir = new DirectoryFileSystem( mLogger, mConfiguration.OutDir );
+            mFilesDir = new DirectoryFileSystem( mLogger, mConfiguration.FilesDir );
+            mCacheFilesDir = new DirectoryFileSystem( mLogger, Path.GetFullPath( Path.Combine( mConfiguration.CacheDir, "files" ) ) );
+            mBinDir = new DirectoryFileSystem( mLogger, mConfiguration.BinDir );
         }
 
         public void Patch( MergeOrder order, List<string> modFilter = null )
         {
-            var cacheFilesDir = GetCacheFilesDir();
-            var cache = InitializeCache( mConfiguration.FilesDir, cacheFilesDir );
+            var cache = InitializeCache();
             var modsProcessed = ProcessMods(cache, order, modFilter);
             if ( modsProcessed > 0 )
             {
-                ProcessBinDir( mConfiguration.BinDir, cache );
+                ProcessBinDir( mBinDir, cache );
             }
             else
             {
@@ -92,7 +52,7 @@ namespace MKDD.Patcher
             if (!PathHelper.AreEqual(mConfiguration.BinDir, mConfiguration.OutDir))
             {
                 // Copy bin directory contents to out directory
-                CopyDirectoryContents( mConfiguration.BinDir, mConfiguration.OutDir );
+                mBinDir.CopyDirectory( ".", mOutDir, ".", true );
             }
 
             mLogger.Information( "Patching done!" );
@@ -110,25 +70,25 @@ namespace MKDD.Patcher
             if ( !Directory.Exists( mConfiguration.ModsDir ) )
             {
                 mLogger.Warning( "Mod directory doesn't exist. Creating new directory..." );
-                mIO.CreateDirectory( mConfiguration.ModsDir );
+                Directory.CreateDirectory( mConfiguration.ModsDir );
             }
 
             if ( !Directory.Exists( mConfiguration.BinDir) )
             {
                 mLogger.Warning( "Bin directory doesn't exist. Creating new directory..." );
-                mIO.CreateDirectory( mConfiguration.BinDir );
+                Directory.CreateDirectory( mConfiguration.BinDir );
             }
 
             if ( !Directory.Exists( mConfiguration.OutDir ) )
             {
                 mLogger.Warning( "Out directory doesn't exist. Creating new directory..." );
-                mIO.CreateDirectory( mConfiguration.OutDir );
+                Directory.CreateDirectory( mConfiguration.OutDir );
             }
 
             if ( !Directory.Exists( mConfiguration.CacheDir ) )
             {
                 mLogger.Warning( "Cache directory doesn't exist. Creating new directory..." );
-                mIO.CreateDirectory( mConfiguration.CacheDir );
+                Directory.CreateDirectory( mConfiguration.CacheDir );
             }
 
             if ( !File.Exists( mConfiguration.ArcPackPath ) )
@@ -146,7 +106,7 @@ namespace MKDD.Patcher
             return true;
         }
 
-        private Cache InitializeCache( string rootFilesDir, string cacheFilesDir )
+        private Cache InitializeCache()
         {
             // Try to load cache
             var cacheJsonPath = Path.Combine( mConfiguration.CacheDir, "cache.json" );
@@ -159,13 +119,13 @@ namespace MKDD.Patcher
                 // Rebuild cache if it doesn't exist, or is outdated.
                 cache = new Cache();
                 mLogger.Information( "Building cache... please wait" );
-                mIO.DeleteDirectory( mConfiguration.CacheDir );
-                CacheFiles( rootFilesDir, cacheFilesDir, cache );
+                Directory.Delete( mConfiguration.CacheDir );
+                CacheFiles( mFilesDir, cache );
 
                 // Process unpacked ARCs
                 while ( true )
                 {
-                    if ( CacheFiles( cacheFilesDir, cacheFilesDir, cache ) == 0 )
+                    if ( CacheFiles( mFilesDir, cache ) == 0 )
                         break;
                 }
 
@@ -201,7 +161,8 @@ namespace MKDD.Patcher
             foreach ( var mod in orderedMods )
             {
                 mLogger.Information($"Processing mod {mod.ModInfo.Title}");
-                ProcessModDir( mod.ModInfo, cache, mod.ModInfo.FilesDir, ModDirectoryType.Normal );
+                var modFilesDir = new DirectoryFileSystem(mLogger, mod.ModInfo.FilesDir);
+                ProcessModDir( mod.ModInfo, modFilesDir, cache, ".", ModDirectoryType.Normal );
             }
 
             return filteredMods.Count;
@@ -213,57 +174,53 @@ namespace MKDD.Patcher
             Archive
         }
 
-        private void ProcessModDir( ModInfo modInfo, Cache cache, string dir, ModDirectoryType dirType )
+        private void ProcessModDir( ModInfo modInfo, IFileSystem modFilesDir, Cache cache, string dir, ModDirectoryType dirType )
         {
-            foreach ( var entryName in Directory.EnumerateFileSystemEntries( dir ) )
+            foreach ( var entryName in modFilesDir.EnumerateFileSystemEntries( dir, "*.*", SearchOption.TopDirectoryOnly ) )
             {
-                var relEntryPath = PathHelper.GetRelativePath(modInfo.FilesDir, entryName);
-
-                if ( File.Exists( entryName ) )
+                if ( modFilesDir.FileExists( entryName ) )
                 {
                     if ( dirType != ModDirectoryType.Archive )
                     {
                         // Copy file to out directory
-                        mIO.CopyFile( entryName, GetBinFilePathFromRelPath( relEntryPath ), true );
+                        modFilesDir.CopyFile( entryName, mBinDir, entryName, true );
                     }
                 }
                 else
                 {
-                    if ( cache.ContainerDirs.ContainsKey( relEntryPath ) )
+                    if ( cache.ContainerDirs.ContainsKey( entryName ) )
                     {
                         // This directory is a container
-                        var containerType = cache.ContainerDirs[relEntryPath];
-                        var entryBinDir = GetBinFilePathFromRelPath( relEntryPath );
-                        var modContainerInfo = modInfo.Containers.FirstOrDefault(x => PathHelper.AreEqual(x.Path, relEntryPath));
+                        var containerType = cache.ContainerDirs[entryName];
+                        var modContainerInfo = modInfo.Containers.FirstOrDefault(x => PathHelper.AreEqual(x.Path, entryName));
                         var mergeContents = modContainerInfo == null || modContainerInfo.Merge;
 
                         switch ( containerType )
                         {
                             case ContainerType.ARC:
                                 {
-                                    if ( mergeContents && !Directory.Exists( entryBinDir ) )
+                                    if ( mergeContents && !mBinDir.DirectoryExists( entryName ) )
                                     {
                                         // Copy original files from cache to out directory
-                                        var entryCacheDir = GetCacheFilePathFromRelPath( relEntryPath );
-                                        Debug.Assert( Directory.Exists( entryCacheDir ) );
-                                        CopyDirectoryContents( entryCacheDir, entryBinDir );
+                                        Debug.Assert( mCacheFilesDir.DirectoryExists( entryName ) );
+                                        mCacheFilesDir.CopyDirectory( entryName, mBinDir, entryName, true );
                                     }
 
                                     // Overwrite the files in the out directory
-                                    CopyDirectoryContents( entryName, entryBinDir );
+                                    modFilesDir.CopyDirectory( entryName, mBinDir, entryName, true );
 
                                     // Recurse into contents of archive
-                                    var arcRootDir = Directory.EnumerateDirectories(entryName).SingleOrDefault();
+                                    var arcRootDir = modFilesDir.EnumerateDirectories(entryName, "*.*", SearchOption.TopDirectoryOnly).SingleOrDefault();
                                     if ( arcRootDir == null )
                                         throw new InvalidOperationException( $"Unable to determine archive root directory for {entryName}. Make sure there is only 1 directory inside." );
 
-                                    ProcessModDir( modInfo, cache, arcRootDir, ModDirectoryType.Archive );
+                                    ProcessModDir( modInfo, modFilesDir, cache, arcRootDir, ModDirectoryType.Archive );
                                 }
                                 break;
                             case ContainerType.AW:
                                 {
                                     // Overwrite the files in the out directory
-                                    CopyDirectoryContents( entryName, entryBinDir );
+                                    modFilesDir.CopyDirectory( entryName, mBinDir, entryName, true );
                                 }
                                 break;
                             default:
@@ -273,13 +230,13 @@ namespace MKDD.Patcher
                     else
                     {
                         // Recurse
-                        ProcessModDir( modInfo, cache, entryName, ModDirectoryType.Normal );
+                        ProcessModDir( modInfo, modFilesDir, cache, entryName, ModDirectoryType.Normal );
                     }
                 }
             }
         }
 
-        private void ProcessBinDir( string outputDir, Cache cache )
+        private void ProcessBinDir( IFileSystem binDir, Cache cache )
         {
             mLogger.Information( "Processing bin directory" );
 
@@ -287,15 +244,13 @@ namespace MKDD.Patcher
             var archiveStack = new Stack<(string, string, ContainerType)>();
             void ProcessOutputDirRecursive( string curDir )
             {
-                foreach ( var dirPath in Directory.EnumerateDirectories( curDir ) )
+                foreach ( var dirPath in binDir.EnumerateDirectories( curDir, "*.*", SearchOption.TopDirectoryOnly ) )
                 {
-                    var relDirPath = PathHelper.GetRelativePath( outputDir, dirPath );
-
-                    if ( cache.ContainerDirs.ContainsKey( relDirPath ) )
+                    if ( cache.ContainerDirs.ContainsKey( dirPath ) )
                     {
                         // This directory is an archive
                         // Build it
-                        archiveStack.Push( (dirPath, relDirPath, cache.ContainerDirs[relDirPath]) );
+                        archiveStack.Push( (dirPath, dirPath, cache.ContainerDirs[dirPath]) );
                     }
 
                     // Recurse
@@ -303,7 +258,7 @@ namespace MKDD.Patcher
                 }
             }
 
-            ProcessOutputDirRecursive( outputDir );
+            ProcessOutputDirRecursive( "." );
 
             // Pack archives LIFO so nested archives play nicely
             while ( archiveStack.Count > 0 )
@@ -313,7 +268,7 @@ namespace MKDD.Patcher
                 switch ( containerType )
                 {
                     case ContainerType.ARC:
-                        PackARC( dirPath, relDirPath );
+                        PackARC( binDir, relDirPath );
                         break;
                     case ContainerType.AW:
                         PatchAW( dirPath, relDirPath );
@@ -327,80 +282,70 @@ namespace MKDD.Patcher
         private void PatchAW( string dirPath, string relDirPath )
         {
             // Get base files
-            var baaFilePath = GetFileFromOutputDir( "AudioRes\\GCKart.baa", FileMissingPolicy.CopyFromCache );
-            var awFilePath = GetFileFromOutputDir( Path.ChangeExtension( relDirPath, ".aw"), FileMissingPolicy.CopyFromCache );
+            if ( !mBinDir.FileExists( BAA_PATH ) )
+                mCacheFilesDir.CopyFile( BAA_PATH, mBinDir, BAA_PATH, true );
+
+            var awFileName = Path.ChangeExtension( relDirPath, ".aw");
+            if ( !mBinDir.FileExists( awFileName ) )
+                mCacheFilesDir.CopyFile( awFileName, mBinDir, awFileName, true );
 
             // Build BAA patch
             mLogger.Information( "Build BAA patch" );
             BAAPatch patch;
-            using ( var baaStream = File.OpenRead( baaFilePath ) )
-            using ( var awStream = File.OpenRead( awFilePath ) )
+            using ( var baaStream = mBinDir.OpenFile( BAA_PATH, FileMode.Open, FileAccess.Read ) )
+            using ( var awStream = mBinDir.OpenFile( awFileName, FileMode.Open, FileAccess.Read ) )
             {
                 var baaPatchBuilder = new BAAPatchBuilder(mLogger);
                 baaPatchBuilder.SetBAAStream( baaStream );
-                baaPatchBuilder.PatchAW( awStream, dirPath );
+                baaPatchBuilder.PatchAW( awStream, mBinDir, dirPath );
                 patch = baaPatchBuilder.Build();
             }
 
             // Overwrite BAA in output directory
-            using ( var baaStream = File.Create( baaFilePath ) )
+            using ( var baaStream = mBinDir.CreateFile( BAA_PATH ) )
             {
-                mLogger.Information( $"Writing {baaFilePath}" );
+                mLogger.Information( $"Writing {BAA_PATH}" );
                 patch.BAAStream.CopyTo( baaStream );
             }
 
             // Overwrite wave files in output directory
             foreach ( var awPatch in patch.AWStreams )
             {
-                var outFilePath = GetBinFilePathFromRelPath( "AudioRes/Waves/" + awPatch.Key );
-                mLogger.Information( $"Writing {outFilePath}" );
-                using ( var awStream = File.Create( outFilePath ) )
+                var patchedAwFileName = "AudioRes/Waves/" + awPatch.Key;
+                mLogger.Information( $"Writing {awFileName}" );
+                using ( var awStream = mBinDir.CreateFile( patchedAwFileName ) )
                     awPatch.Value.CopyTo( awStream );
             }
 
             // Delete directory from output
-            mIO.DeleteDirectory( dirPath );
+            mBinDir.DeleteDirectory( dirPath, true );
         }
 
-        private void PackARC( string dirPath, string relDirPath )
+        private void PackARC( IFileSystem fs, string dirPath )
         {
-            var arcRootDirPath = Directory.EnumerateDirectories(dirPath).FirstOrDefault();
+            var arcRootDirPath = fs.EnumerateDirectories(dirPath, "*.*", SearchOption.TopDirectoryOnly).FirstOrDefault();
             if ( arcRootDirPath == null )
             {
                 mLogger.Error( $"Expected ARC root directory inside {dirPath}. Using directory as root instead." );
                 arcRootDirPath = dirPath;
             }
 
+            var physArcRootDirPath = fs.GetPhysicalPath( arcRootDirPath );
             var process = new Process();
-            process.StartInfo = new ProcessStartInfo( Path.GetFullPath( mConfiguration.ArcPackPath ), arcRootDirPath ) { RedirectStandardOutput = false, CreateNoWindow = true };
+            process.StartInfo = new ProcessStartInfo( Path.GetFullPath( mConfiguration.ArcPackPath ), physArcRootDirPath ) { RedirectStandardOutput = false, CreateNoWindow = true };
             process.Start();
-            mLogger.Information( $"Packing {relDirPath}" );
+            mLogger.Information( $"Packing {dirPath}" );
             process.WaitForExit();
 
-            mIO.CopyFile( arcRootDirPath + ".arc", dirPath + ".arc", true );
-            mIO.DeleteDirectory( dirPath );
+            fs.CopyFile( arcRootDirPath + ".arc", dirPath + ".arc", true );
+            fs.DeleteDirectory( dirPath, true );
         }
 
-        private void CopyDirectoryContents( string sourceDir, string destDir )
-        {
-            mLogger.Information( $"Copying {sourceDir} to {destDir}" );
-
-            // Now create all of the directories
-            foreach ( string dirPath in Directory.GetDirectories( sourceDir, "*",
-                SearchOption.AllDirectories ) )
-                mIO.CreateDirectory( dirPath.Replace( sourceDir, destDir ) );
-
-            // Copy all the files & replace any files with the same name
-            foreach ( string newPath in Directory.GetFiles( sourceDir, "*.*",
-                SearchOption.AllDirectories ) )
-                mIO.CopyFile( newPath, newPath.Replace( sourceDir, destDir ), true );
-        }
-
-        private int CacheFiles( string inputFilesDir, string outputFilesDir, Cache cache )
+        private int CacheFiles( IFileSystem filesDir, Cache cache )
         {
             var runProcessJobs = new List<RunProcessJob>();
-            foreach ( var filePath in Directory.EnumerateFiles( inputFilesDir, "*.*", SearchOption.AllDirectories ) )
-                CacheFile( inputFilesDir, outputFilesDir, runProcessJobs, filePath, cache );
+            foreach ( var filePath in filesDir.EnumerateFiles( ".", "*.*", SearchOption.AllDirectories ) )
+                CacheFile( runProcessJobs, filesDir, filePath, cache );
 
             WaitForRunProcessJobCompletion( runProcessJobs );
             return runProcessJobs.Count;
@@ -414,34 +359,30 @@ namespace MKDD.Patcher
                 job.Process.WaitForExit();
 
                 foreach ( var item in job.TemporaryFiles )
-                    mIO.DeleteFile( item );           
+                    File.Delete( item );           
             }
         }
 
-        private void CacheFile( string inputFilesDir, string outputFilesDir,
-            List<RunProcessJob> runProcessJobs, string filePath, Cache cache )
+        private void CacheFile( List<RunProcessJob> runProcessJobs, IFileSystem filesDir, string filePath, Cache cache )
         {
             // Either we copy the archive or we copy the extracted contents
             // copying the archive is faster so we'll do that instead and later delete it.
             var extension = Path.GetExtension( filePath ).ToLowerInvariant();
-            var relFilePath = PathHelper.GetRelativePath( inputFilesDir, filePath );
-            var relDirPath = PathHelper.GetFilePathWithoutExtension( relFilePath );
-            var outArcDirPath = Path.Combine( outputFilesDir, relDirPath );
-            var outArcFilePath = Path.Combine( outArcDirPath, Path.GetFileName( filePath ) );
+            var dirPath = PathHelper.GetFilePathWithoutExtension( filePath );
 
             switch ( extension )
             {
                 case ".arc":
-                    CacheARC( runProcessJobs, filePath, cache, relFilePath, relDirPath, outArcDirPath, outArcFilePath );
+                    CacheARC( runProcessJobs, filesDir, filePath, dirPath, cache );
                     break;
 
                 case ".aw":
-                    mIO.CopyFile( filePath, GetCacheFilePathFromRelPath( relFilePath ), true );
-                    cache.ContainerDirs[relDirPath] = ContainerType.AW;
+                    filesDir.CopyFile( filePath, mCacheFilesDir, filePath, true );
+                    cache.ContainerDirs[dirPath] = ContainerType.AW;
                     break;
 
                 case ".baa":
-                    mIO.CopyFile( filePath, GetCacheFilePathFromRelPath( relFilePath ), true );
+                    filesDir.CopyFile( filePath, mCacheFilesDir, filePath, true );
                     break;
 
                 default:
@@ -449,37 +390,31 @@ namespace MKDD.Patcher
             }
         }
 
-        private void CacheARC( List<RunProcessJob> runProcessJobs, string filePath, Cache cache, string relFilePath, string relDirPath, string cacheArcDirPath, string cacheArcFilePath )
+        private void CacheARC( List<RunProcessJob> runProcessJobs, IFileSystem filesDir, string filePath, string dirPath, Cache cache )
         {
-            cache.ContainerDirs[relDirPath] = ContainerType.ARC;
-            mLogger.Information( $"Unpacking {relFilePath}" );
+            cache.ContainerDirs[filePath] = ContainerType.ARC;
+            mLogger.Information( $"Unpacking {filePath}" );
 
             // Copy archive to cache (but only if not already in cache)
-            mIO.CreateDirectory( cacheArcDirPath );
-            if ( !File.Exists( cacheArcFilePath ) )
+            mCacheFilesDir.CreateDirectory( dirPath );
+            if ( !mCacheFilesDir.FileExists( filePath ) )
             {
-                mIO.CopyFile( filePath, cacheArcFilePath, false );
+                filesDir.CopyFile( filePath, mCacheFilesDir, filePath, false );
 
                 // If the directory the arc is being extracted to is in the same directory as the file itself, delete the original file
-                if ( PathHelper.AreInSameDirectory( filePath, cacheArcDirPath ) )
-                    mIO.DeleteFile( filePath );
+                if ( PathHelper.AreInSameDirectory( filePath, dirPath ) )
+                    mCacheFilesDir.DeleteFile( filePath );
             }
 
             // Extract it
             var process = new Process();
-            process.StartInfo = new ProcessStartInfo( mConfiguration.ArcExtractPath, Path.GetFullPath( cacheArcFilePath ) )
+            process.StartInfo = new ProcessStartInfo( mConfiguration.ArcExtractPath, Path.GetFullPath( mCacheFilesDir.GetPhysicalPath( filePath ) ) )
             {
                 RedirectStandardOutput = false,
                 CreateNoWindow = true
             };
             process.Start();
-            runProcessJobs.Add( new RunProcessJob( process ) { TemporaryFiles = { Path.GetFullPath( cacheArcFilePath ) } } );
+            runProcessJobs.Add( new RunProcessJob( process ) { TemporaryFiles = { Path.GetFullPath( mCacheFilesDir.GetPhysicalPath( filePath ) ) } } );
         }
-    }
-
-    public enum MergeOrder
-    {
-        TopToBottom,
-        BottomToTop,
     }
 }
