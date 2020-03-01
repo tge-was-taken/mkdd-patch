@@ -20,6 +20,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LunaboyRarcTools", "Lunaboy
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MKDD.Patcher.GUI", "MKDD.Patcher.GUI\MKDD.Patcher.GUI.csproj", "{94ABE704-48AB-4883-86E2-2AEB6D22F379}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Amicitia.IO", "..\external\Amicitia.IO\src\Amicitia.IO\Amicitia.IO.csproj", "{E3EC2FC4-51E6-47E6-81F9-F1EC51CAFAB9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external", "external", "{5528C100-FEA0-4C9E-9FBC-5272CD13DC4A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +42,10 @@ Global
 		{94ABE704-48AB-4883-86E2-2AEB6D22F379}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94ABE704-48AB-4883-86E2-2AEB6D22F379}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94ABE704-48AB-4883-86E2-2AEB6D22F379}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3EC2FC4-51E6-47E6-81F9-F1EC51CAFAB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3EC2FC4-51E6-47E6-81F9-F1EC51CAFAB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3EC2FC4-51E6-47E6-81F9-F1EC51CAFAB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3EC2FC4-51E6-47E6-81F9-F1EC51CAFAB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -45,6 +53,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{FCA670A7-E1B0-4F60-97B7-6DB827AB03AF} = {51F33560-8CB1-463A-B7B6-305115B35288}
 		{E2B3B2C2-2F37-4BF2-9DDF-57A6F6C63725} = {FCA670A7-E1B0-4F60-97B7-6DB827AB03AF}
+		{E3EC2FC4-51E6-47E6-81F9-F1EC51CAFAB9} = {5528C100-FEA0-4C9E-9FBC-5272CD13DC4A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {22D724BA-EEC3-4915-B170-A176D75F9CE8}

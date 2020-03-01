@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Amicitia.IO.Binary;
 using arookas;
-using MKDD.Patcher.IO;
 using NAudio.Wave;
 
 namespace MKDD.Patcher.Audio
@@ -41,13 +41,13 @@ namespace MKDD.Patcher.Audio
                 var smplChunk = waveReader.ExtraChunks.FirstOrDefault(x => x.IdentifierAsString == "smpl");
                 if ( smplChunk != null )
                 {
-                    using ( var reader = new BinaryIOStream( waveReader, IOMode.Read, Endianness.Big ) )
+                    using ( var reader = new BinaryValueReader( waveReader, Amicitia.IO.Streams.StreamOwnership.Retain, Endianness.Big ) )
                     {
-                        reader.Seek( smplChunk.StreamPosition + 0x24, Origin.Begin );
+                        reader.Seek( smplChunk.StreamPosition + 0x24, SeekOrigin.Begin );
                         var sampleLoopCount = reader.ReadInt32();
                         if ( sampleLoopCount > 0 )
                         {
-                            reader.Seek( 0x04 + 0x08, Origin.Current );
+                            reader.Seek( 0x04 + 0x08, SeekOrigin.Current );
                             result.HasLoop = true;
                             result.LoopStart = reader.ReadInt32();
                             result.LoopEnd = reader.ReadInt32();

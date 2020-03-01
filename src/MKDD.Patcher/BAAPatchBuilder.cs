@@ -3,9 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Amicitia.IO;
+using Amicitia.IO.Binary;
 using Microsoft.Extensions.Configuration;
 using MKDD.Patcher.Audio;
-using MKDD.Patcher.IO;
 using Serilog;
 
 namespace MKDD.Patcher
@@ -16,14 +17,14 @@ namespace MKDD.Patcher
         private LoggedIO mIO;
         private BAAParser mBAAParser;
         private Stream mBAAStream;
-        private List<WaveGroup> mWaveGroups;
+        private List<FileWaveGroup> mWaveGroups;
         private Dictionary<string, Stream> mNewAWStreams;
 
         public BAAPatchBuilder(ILogger logger)
         {
             mLogger = logger;
             mIO = new LoggedIO( mLogger );
-            mWaveGroups = new List<WaveGroup>();
+            mWaveGroups = new List<FileWaveGroup>();
             mNewAWStreams = new Dictionary<string, Stream>();
             mBAAParser = new BAAParser( mLogger );
         }
@@ -48,7 +49,7 @@ namespace MKDD.Patcher
                 var indexValue = Regex.Match(Path.GetFileNameWithoutExtension(file), @"(0_)?(?<index>\d+)")
                     .Groups["index"].Value;
                 var index = int.Parse(indexValue);
-                ref var waveInfo = ref waveGroup.WaveInfo[index];
+                ref var waveInfo = ref waveGroup.FileWaveInfo[index].WaveInfo;
 
                 mLogger.Information( $"Mapped {file} to index {index}" );
                 using ( var fileStream = fs.OpenFile( file, FileMode.Open, FileAccess.Read ) )
@@ -80,14 +81,14 @@ namespace MKDD.Patcher
 
             mLogger.Information( $"Building new AW" );
             var newAwStream = new MemoryStream();
-            using ( var writer = new BinaryIOStream( newAwStream, IOMode.Write, Endianness.Big, Encoding.Default, true ) )
+            using ( var writer = new BinaryValueWriter( newAwStream, Amicitia.IO.Streams.StreamOwnership.Retain, Endianness.Big, Encoding.Default ) )
             {
-                for ( int i = 0; i < waveGroup.WaveInfo.Length; i++ )
+                for ( int i = 0; i < waveGroup.FileWaveInfo.Length; i++ )
                 {
-                    writer.Position = AlignmentHelper.Align( writer.Position, 32 );
-                    waveGroup.WaveInfo[i].WaveStart = ( uint )writer.Position;
-                    writer.WriteBytes( waveBytes[i], 0, waveBytes[i].Length );
-                    waveGroup.WaveInfo[i].WaveSize = ( uint )( writer.Position - waveGroup.WaveInfo[i].WaveStart );
+                    writer.Align( 32 );
+                    waveGroup.FileWaveInfo[i].WaveInfo.WaveStart = ( uint )writer.Position;
+                    writer.WriteArray( waveBytes[i] );
+                    waveGroup.FileWaveInfo[i].WaveInfo.WaveSize = ( uint )( writer.Position - waveGroup.FileWaveInfo[i].WaveInfo.WaveStart );
                     writer.Align( 32 );
                 }
             }
@@ -97,15 +98,15 @@ namespace MKDD.Patcher
             return this;
         }
 
-        private static byte[][] ReadWaveGroupRawWaves( Stream awStream, WaveGroup waveGroup )
+        private static byte[][] ReadWaveGroupRawWaves( Stream awStream, FileWaveGroup waveGroup )
         {
-            var waveBytes = new byte[waveGroup.WaveInfo.Length][];
-            using ( var reader = new BinaryIOStream( awStream, IOMode.Read, Endianness.Big, Encoding.Default, true ) )
+            var waveBytes = new byte[waveGroup.FileWaveInfo.Length][];
+            using ( var reader = new BinaryValueReader( awStream, Amicitia.IO.Streams.StreamOwnership.Retain, Endianness.Big, Encoding.Default ) )
             {
-                for ( int i = 0; i < waveGroup.WaveInfo.Length; i++ )
+                for ( int i = 0; i < waveGroup.FileWaveInfo.Length; i++ )
                 {
-                    reader.Seek( waveGroup.WaveInfo[i].WaveStart, Origin.Begin );
-                    waveBytes[i] = reader.ReadBytes( ( int )( waveGroup.WaveInfo[i].WaveSize ) );
+                    reader.Seek( waveGroup.FileWaveInfo[i].WaveInfo.WaveStart, SeekOrigin.Begin );
+                    waveBytes[i] = reader.ReadArray<byte>( ( int )( waveGroup.FileWaveInfo[i].WaveInfo.WaveSize ) );
                 }
             }
 
@@ -120,14 +121,14 @@ namespace MKDD.Patcher
             mBAAStream.CopyTo( newBAAStream );
             newBAAStream.Position = 0;
 
-            using (var writer = new BinaryIOStream( newBAAStream, IOMode.Write, Endianness.Big, Encoding.ASCII, true))
+            using (var writer = new BinaryValueWriter( newBAAStream, Amicitia.IO.Streams.StreamOwnership.Retain, Endianness.Big, Encoding.ASCII))
             {
                 foreach ( var waveGroup in mWaveGroups )
                 {
-                    foreach ( var waveInfo in waveGroup.WaveInfo )
+                    foreach ( var waveInfo in waveGroup.FileWaveInfo )
                     {
-                        writer.Seek( waveInfo.FilePosition, Origin.Begin );
-                        waveInfo.Serialize( writer );
+                        writer.Seek( waveInfo.BinarySourceInfo.StartOffset, SeekOrigin.Begin );
+                        writer.Write( waveInfo.WaveInfo );
                     }
                 }
             }

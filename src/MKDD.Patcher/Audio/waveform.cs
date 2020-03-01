@@ -26,6 +26,7 @@ SOFTWARE.
 */
 #endregion
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -33,7 +34,6 @@ namespace arookas
 {
 	public static class Waveform
 	{
-
 		private static int[] sSigned2BitTable = new int[4] {
 			0, 1, -2, -1,
 		};
@@ -220,7 +220,7 @@ namespace arookas
 
 					sb.AppendFormat( "\nLAST: {0,6} PENULT: {1,6}\n", last, penult );
 
-					//mareep.WriteError( sb.ToString() );
+					Trace.WriteLine( sb.ToString() );
 				}
 			}
 
@@ -412,7 +412,7 @@ namespace arookas
 
 					sb.AppendFormat( "\nLAST: {0,6} PENULT: {1,6}\n", last, penult );
 
-					//mareep.WriteError( sb.ToString() );
+					Trace.WriteLine( sb.ToString() );
 				}
 			}
 
@@ -498,11 +498,11 @@ namespace arookas
 
 				Pcm16ToAdpcm4( pcm16Frame, adpcm4Frame, ref last, ref penult );
 
-				if ( historyTable != null )
-					historyTable[i / 16] = new AdpcmHistory() { Last = last, Penult = penult };
-
 				Array.Copy( adpcm4Frame, 0, output, outputIdx, adpcm4Frame.Length );
 				outputIdx += adpcm4Frame.Length;
+
+				if ( historyTable != null )
+					historyTable[i / 16] = new AdpcmHistory() { Last = last, Penult = penult };
 			}
 
 			return output;

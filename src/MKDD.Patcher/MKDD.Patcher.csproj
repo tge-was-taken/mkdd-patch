@@ -21,6 +21,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>Tools\LunaboyRarcTools\%(Filename)%(Extension)</TargetPath>
     </ContentWithTargetPath>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\Amicitia.IO\src\Amicitia.IO\Amicitia.IO.csproj" />
   </ItemGroup> 
 
 
