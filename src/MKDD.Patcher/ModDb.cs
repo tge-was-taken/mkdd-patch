@@ -12,20 +12,19 @@ namespace MKDD.Patcher
 
         public string BaseDirectory { get; }
 
-        public List<ModInfo> Mods { get; }
+        public List<ModInfo> Mods { get; private set; }
 
         public ModDb(ILogger logger, PatcherConfig configuration, string modsDirectory )
         {
             mLogger = logger;
             mConfiguration = configuration;
             BaseDirectory = modsDirectory;
-            Mods = new List<ModInfo>();
-
             Initialize();
         }
 
-        private void Initialize()
+        public void Initialize()
         {
+            Mods = new List<ModInfo>();
             mLogger.Information( "Initializing Mod DB" );
 
             Directory.CreateDirectory( BaseDirectory );

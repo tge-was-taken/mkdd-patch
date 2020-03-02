@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -18,12 +19,17 @@ namespace MKDD.Patcher.GUI
 {
     public partial class MainForm : Form
     {
+        private const string MSG_ABOUT = @"
+MKDD Patcher GUI made by TGE.
+Special thanks to:
+- Lunaboy (LunaboyRarcTools)
+- arookas (mareep)";
         private Logger mLogger;
         private Logger mPatcherLogger;
         private GuiConfig mConfiguration;
         private MergeOrder mMergeOrder;
         private ModDb mModDb;
-        private BindingList<ModVm> mModVms;
+        private BindingList<ModListVm> mModVms;
         private bool mIsPatching;
 
         public MainForm()
@@ -48,13 +54,13 @@ namespace MKDD.Patcher.GUI
                 .CreateLogger();
 
             mConfiguration = configuration;
-            mModVms = new BindingList<ModVm>();
+            mModVms = new BindingList<ModListVm>();
 
-            clmEnabled.DataPropertyName = nameof( ModVm.Enabled );
-            clmTitle.DataPropertyName = nameof( ModVm.Title );
-            clmVersion.DataPropertyName = nameof( ModVm.Version );
-            clmAuthors.DataPropertyName = nameof( ModVm.Authors );
-            clmDescription.DataPropertyName = nameof( ModVm.Description );
+            clmEnabled.DataPropertyName = nameof( ModListVm.Enabled );
+            clmTitle.DataPropertyName = nameof( ModListVm.Title );
+            clmVersion.DataPropertyName = nameof( ModListVm.Version );
+            clmAuthors.DataPropertyName = nameof( ModListVm.Authors );
+            clmDescription.DataPropertyName = nameof( ModListVm.Description );
 
             Initialize();
         }
@@ -118,7 +124,7 @@ namespace MKDD.Patcher.GUI
             }
 
             foreach ( var item in indexedMods.OrderBy( x => x.Index ) )
-                mModVms.Add( new ModVm( item.DbModInfo, item.GuiModInfo ) );
+                mModVms.Add( new ModListVm( item.DbModInfo, item.GuiModInfo ) );
 
             SaveConfiguration();
         }
@@ -182,11 +188,7 @@ namespace MKDD.Patcher.GUI
 
         private void tsmiAbout_Click(object sender, EventArgs e)
         {
-            var text = @"
-MKDD Patcher GUI made by TGE.
-Special thanks to:
-- Lunaboy (LunaboyRarcTools)
-- arookas (mareep)";
+            var text = MSG_ABOUT;
 
             MessageBox.Show(text, "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -238,6 +240,53 @@ Special thanks to:
         {
             rtbLog.SelectionStart = rtbLog.Text.Length;
             rtbLog.ScrollToCaret();
+        }
+
+        private void btnAdd_Click( object sender, EventArgs e )
+        {
+            using ( var dialog = new EditModForm( mConfiguration, null ) )
+            {
+                if ( dialog.ShowDialog() != DialogResult.OK )
+                    return;
+
+                var modInfo = dialog.ModInfo;
+                Directory.CreateDirectory( modInfo.RootDir );
+                Directory.CreateDirectory( modInfo.FilesDir );
+                modInfo.Save( Path.Combine( modInfo.RootDir, ModInfo.FILENAME ) );
+                Initialize();
+                Process.Start( modInfo.FilesDir );
+            }
+        }
+
+        private void btnDel_Click( object sender, EventArgs e )
+        {
+            if ( MessageBox.Show( "This will permanently delete the files from your system.\nAre you sure you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation ) != DialogResult.Yes )
+                return;
+
+            foreach ( DataGridViewRow row in dgvMods.SelectedRows )
+            {
+                var item = mModVms[row.Index];
+
+                try
+                {
+                    Directory.Delete( item.ModInfo.RootDir, true );
+                }
+                catch ( IOException )
+                {
+                    mLogger.Error( $"Can not delete directory: {item.ModInfo.RootDir}. Might still be in use." );
+                }
+
+            }
+
+            Initialize();
+        }
+
+        private void dgvMods_CellMouseDoubleClick( object sender, DataGridViewCellMouseEventArgs e )
+        {
+            using ( var dialog = new EditModForm( mConfiguration, mModVms[e.RowIndex].ModInfo ) )
+            {
+                if ( dialog.ShowDialog() != DialogResult.OK ) return;
+            }
         }
     }
 }

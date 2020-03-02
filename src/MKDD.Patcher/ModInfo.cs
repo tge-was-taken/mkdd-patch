@@ -12,7 +12,7 @@ namespace MKDD.Patcher
         [XmlElement( "title")] public string Title { get; set; }
         [XmlElement("description")] public string Description { get; set; }
         [XmlElement("version")] public string Version { get; set; }
-        [XmlElement("author")] public string Author { get; set; }
+        [XmlElement("author")] public string Authors { get; set; }
         [XmlElement("container")] public List<ModContainerInfo> Containers { get; set; }
 
         [XmlIgnore] public string RootDir { get; set; }
@@ -23,6 +23,17 @@ namespace MKDD.Patcher
         {
         }
 
+        public ModInfo( ModInfo other )
+        {
+            Title = other.Title;
+            Description = other.Description;
+            Version = other.Version;
+            Authors = other.Authors;
+            Containers = new List<ModContainerInfo>( other.Containers.Count );
+            for ( int i = 0; i < Containers.Count; i++ )
+                Containers[i] = new ModContainerInfo( other.Containers[i] );
+        }
+
         public static ModInfo CreateDefaultForDirectory( string directory )
         {
             var modInfo = new ModInfo
@@ -30,7 +41,7 @@ namespace MKDD.Patcher
                 Title = Path.GetFileName( directory ),
                 Description = string.Empty,
                 Version = string.Empty,
-                Author = string.Empty,
+                Authors = string.Empty,
                 Containers = new List<ModContainerInfo>(),
                 RootDir = directory,
                 FilesDir = Path.Combine( directory, "files" )
@@ -68,6 +79,17 @@ namespace MKDD.Patcher
 
     public class ModContainerInfo
     {
+        public ModContainerInfo()
+        {
+
+        }
+
+        public ModContainerInfo( ModContainerInfo other )
+        {
+            Path = other.Path;
+            Merge = other.Merge;
+        }
+
         [XmlAttribute( "path" )] public string Path { get; set; }
         [XmlAttribute( "merge" )] public bool Merge { get; set; }
     }
